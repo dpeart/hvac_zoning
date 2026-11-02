@@ -17,9 +17,8 @@ The system has two operational modes:
 
 ```
 packages/hvac_zoning/
-├── global/
-│   └── hvac_shared_globals.yaml  # Shared tuning knobs (deadband, sensitivity, weights, loop interval, min airflow)
 ├── upstairs/
+│   ├── hvac_upstairs_globals.yaml       # Upstairs tuning knobs (deadband, sensitivity, weights, loop interval, min airflow)
 │   ├── hvac_upstairs_automations.yaml  # Control loop automation
 │   ├── hvac_upstairs_inputs.yaml       # Zone helpers: names, temp/occupancy entity wiring
 │   ├── hvac_upstairs_sensors.yaml      # Template sensors: temp, error, demand, raw registers, total
@@ -40,7 +39,7 @@ packages/hvac_zoning/
 ```yaml
 homeassistant:
   packages:
-    pkg_shared_globals: !include packages/hvac_zoning/global/hvac_shared_globals.yaml
+    pkg_upstairs_globals: !include packages/hvac_zoning/upstairs/hvac_upstairs_globals.yaml
     pkg_upstairs_automations: !include packages/hvac_zoning/upstairs/hvac_upstairs_automations.yaml
     # ... one entry per package file
 ```
@@ -219,7 +218,7 @@ The error sensors are test-mode aware: they substitute test inputs when `input_b
 | `input_number.hvac_min_airflow` | Minimum register equivalents | 1 |
 | `input_boolean.hvac_zoning_enabled` | Master on/off | off |
 
-(Downstairs equivalents all prefixed `hvac_downstairs_`; note `hvac_zone_loop_interval` upstairs lives in `global/hvac_shared_globals.yaml`, downstairs in its own `downstairs/hvac_downstairs_globals.yaml`.)
+(Downstairs equivalents all prefixed `hvac_downstairs_`; note `hvac_zone_loop_interval` upstairs lives in `upstairs/hvac_upstairs_globals.yaml`, downstairs in its own `downstairs/hvac_downstairs_globals.yaml`.)
 
 ### Test bench inputs
 
