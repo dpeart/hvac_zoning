@@ -18,24 +18,37 @@ The system has two operational modes:
 ```
 packages/hvac_zoning/
 ├── global/
-│   └── hvac_globals.yaml        # Shared-ish upstream tuning knobs (per-floor copies exist)
+│   └── hvac_shared_globals.yaml  # Shared tuning knobs (deadband, sensitivity, weights, loop interval, min airflow)
 ├── upstairs/
-│   ├── hvac_globals.yaml        # (not present) — upstream knobs live in global/
-│   ├── hvac_automations.yaml     # Control loop automation
-│   ├── hvac_dashboard.yaml       # Lovelace dashboard (dual-mode)
-│   ├── hvac_inputs.yaml          # Zone helpers: names, temp/occupancy entity wiring
-│   ├── hvac_sensors.yaml         # Template sensors: error, demand, raw registers, total
-│   └── hvac_test.yaml            # Test-mode inputs (define entities used by dashboard)
+│   ├── hvac_upstairs_automations.yaml  # Control loop automation
+│   ├── hvac_upstairs_inputs.yaml       # Zone helpers: names, temp/occupancy entity wiring
+│   ├── hvac_upstairs_sensors.yaml      # Template sensors: temp, error, demand, raw registers, total
+│   └── hvac_upstairs_test.yaml         # Test-mode inputs (define entities used by dashboard)
 └── downstairs/
-    ├── hvac_globals.yaml         # Downstairs tuning knobs (own set, prefixed hvac_downstairs_)
-    ├── hvac_automations.yaml     # Downstairs control loop
-    ├── hvac_dashboard.yaml       # Downstairs Lovelace dashboard
-    ├── hvac_inputs.yaml          # Downstairs zone helpers
-    ├── hvac_sensors.yaml         # Downstairs template sensors
-    └── hvac_test.yaml            # Downstairs test-mode inputs
+    ├── hvac_downstairs_automations.yaml  # Downstairs control loop
+    ├── hvac_downstairs_globals.yaml      # Downstairs tuning knobs (own set, prefixed hvac_downstairs_)
+    ├── hvac_downstairs_inputs.yaml       # Downstairs zone helpers
+    ├── hvac_downstairs_sensors.yaml      # Downstairs template sensors
+    └── hvac_downstairs_test.yaml         # Downstairs test-mode inputs
+
+dashboards/                          # OUTSIDE packages/ — not loaded as packages
+├── hvac_upstairs_dashboard.yaml     # Lovelace dashboard (dual-mode)
+└── hvac_downstairs_dashboard.yaml   # Downstairs Lovelace dashboard
 ```
 
-**Loading mechanism:** `configuration.yaml` has `homeassistant: packages: !include_dir_named packages`. This loads each subfolder as a package; every YAML file inside the folder is merged into one config. The dashboard files are *not* auto-loaded as Lovelace dashboards by this mechanism — they must be either pasted into a storage-mode dashboard's raw editor or registered under `lovelace: dashboards:`. Entity definition files (`hvac_test.yaml`, `hvac_inputs.yaml`, etc.) **do** load automatically on every restart/reload.
+**Loading mechanism:** `configuration.yaml` loads this project's packages **explicitly**, one `!include` per file (no recursive glob), e.g.:
+
+```yaml
+homeassistant:
+  packages:
+    pkg_shared_globals: !include packages/hvac_zoning/global/hvac_shared_globals.yaml
+    pkg_upstairs_automations: !include packages/hvac_zoning/upstairs/hvac_upstairs_automations.yaml
+    # ... one entry per package file
+```
+
+This is deliberate: `!include_dir_named packages` would recursively glob **every** `.yaml` under `packages/` into a package definition, which breaks on the dashboard files (top-level `title:`/`views:` are not valid package keys) and silently collides on duplicate basenames across subfolders. Loading explicitly keeps `dashboards/` (and any other non-package YAML) safe inside the repo. Package names (`pkg_*`) are arbitrary but must be unique.
+
+The dashboard files live in `dashboards/` (sibling of `packages/`) so the package loader never parses them — they are *not* auto-loaded as Lovelace dashboards; paste each into a storage-mode dashboard's raw editor or register under `lovelace: dashboards:`. Entity definition files (`hvac_*_test.yaml`, `hvac_*_inputs.yaml`, etc.) **do** load automatically on every restart/reload.
 
 **Entity naming conventions:**
 - Upstairs: `input_number.hvac_test_zone_1_temp`, `sensor.upstairs_zone_1_error`, `input_boolean.hvac_test_mode`, etc.
@@ -196,7 +209,7 @@ The error sensors are test-mode aware: they substitute test inputs when `input_b
 | `input_number.hvac_min_airflow` | Minimum register equivalents | 1 |
 | `input_boolean.hvac_zoning_enabled` | Master on/off | off |
 
-(Downstairs equivalents all prefixed `hvac_downstairs_`; note `hvac_zone_loop_interval` upstairs lives in `global/hvac_globals.yaml`, downstairs in its own `downstairs/hvac_globals.yaml`.)
+(Downstairs equivalents all prefixed `hvac_downstairs_`; note `hvac_zone_loop_interval` upstairs lives in `global/hvac_shared_globals.yaml`, downstairs in its own `downstairs/hvac_downstairs_globals.yaml`.)
 
 ### Test bench inputs
 
@@ -245,8 +258,8 @@ Two dashboards exist (upstairs `path: hvac-upstairs`, downstairs `path: hvac-dow
 
 ## Deployment / Onboarding Steps
 
-1. **Load packages:** files under `packages/hvac_zoning/*/*.yaml` auto-load on restart (via `!include_dir_named packages`). Restart or "Reload all YAML" after editing entity definitions.
-2. **Create dashboards:** paste each `hvac_dashboard.yaml` into a storage-mode dashboard's raw config editor (or register via `lovelace: dashboards:` in `configuration.yaml` with `mode: yaml`). Storage-mode dashboards apply instantly on save.
+1. **Load packages:** the HVAC package files load on restart via the explicit `!include` entries in `configuration.yaml` under `homeassistant.packages`. Restart or "Reload all YAML" after editing entity definitions.
+2. **Create dashboards:** paste each `dashboards/hvac_*_dashboard.yaml` into a storage-mode dashboard's raw config editor (or register via `lovelace: dashboards:` in `configuration.yaml` with `mode: yaml`). Storage-mode dashboards apply instantly on save.
 3. **Assign temp sensors:** in production mode, use the "Zone Temperature Sensors" card (or Developer Tools → States) to point each `input_text.*_temp_entity` at the real sensor entity ID. Defaults: stairs/masterbed → thermostat current-temp sensor; others → `sensor.placeholder_*`.
 4. **Verify zones:** confirm the thermostat climate entity matches the floor (`climate.upstairs_nativezone` / `climate.downstairs_nativezone`), and relay entity prefixes (`switch.iotmug_16_relay_board_relay_N` / `switch.iotmug_2_relay_board_relay_N`).
 
@@ -278,7 +291,7 @@ Two dashboards exist (upstairs `path: hvac-upstairs`, downstairs `path: hvac-dow
 
 - **Min-airflow didn't open enough dampers:** allocation only opens zones in priority order stairs→…→up to capacity. If deficit is consumed by early zones, later zones stay closed. Check the `Minimum Airflow Enforced` warning log for the effective demands.
 - **Unoccupied zones cap at 1 register:** caused by `min(raw, 1.0)` before the 0.2 unoccupied weight. Fix: raise `hvac_zone_weight_unoccupied` to 1.0 (both floors now default 1.0).
-- **`input_number` "expected a mapping/float" errors:** means an entity body got indented under another entity (nested instead of top-level). Check indentation in `hvac_test.yaml`.
+- **`input_number` "expected a mapping/float" errors:** means an entity body got indented under another entity (nested instead of top-level). Check indentation in `hvac_*_test.yaml`.
 - **Dashboard "expected str at entity_ids[N]" history error:** a card got nested inside the history-graph's `entities:` list (indentation bug). Keep conditional cards at the top level of `cards:`.
 - **Changing `initial:` in YAML doesn't update existing helpers** — the value in `.storage` wins. Use the dashboard slider or Developer Tools → States, or delete the helper and reload.
 - **Entity ID from automation alias:** YAML automations get `automation.<slugified_alias>` (e.g. `alias: "HVAC Upstairs: Zone Control Loop"` → `automation.hvac_upstairs_zone_control_loop`). The dashboard must target exactly this.

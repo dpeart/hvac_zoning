@@ -27,6 +27,7 @@ views:
             title: "Z1 · Stairs"
             show_header_toggle: false
             entities:
+              - sensor.upstairs_zone_1_temp
               - sensor.upstairs_zone_1_error
               - sensor.upstairs_zone_1_demand
               - sensor.upstairs_zone_1_raw_registers
@@ -34,6 +35,7 @@ views:
             title: "Z2 · Bed 1"
             show_header_toggle: false
             entities:
+              - sensor.upstairs_zone_2_temp
               - sensor.upstairs_zone_2_error
               - sensor.upstairs_zone_2_demand
               - sensor.upstairs_zone_2_raw_registers
@@ -41,6 +43,7 @@ views:
             title: "Z3 · Bed 2"
             show_header_toggle: false
             entities:
+              - sensor.upstairs_zone_3_temp
               - sensor.upstairs_zone_3_error
               - sensor.upstairs_zone_3_demand
               - sensor.upstairs_zone_3_raw_registers
@@ -48,6 +51,7 @@ views:
             title: "Z4 · Bed 3"
             show_header_toggle: false
             entities:
+              - sensor.upstairs_zone_4_temp
               - sensor.upstairs_zone_4_error
               - sensor.upstairs_zone_4_demand
               - sensor.upstairs_zone_4_raw_registers
@@ -55,6 +59,7 @@ views:
             title: "Z5 · Master Bed"
             show_header_toggle: false
             entities:
+              - sensor.upstairs_zone_5_temp
               - sensor.upstairs_zone_5_error
               - sensor.upstairs_zone_5_demand
               - sensor.upstairs_zone_5_raw_registers
@@ -62,6 +67,7 @@ views:
             title: "Z6 · Master Bath"
             show_header_toggle: false
             entities:
+              - sensor.upstairs_zone_6_temp
               - sensor.upstairs_zone_6_error
               - sensor.upstairs_zone_6_demand
               - sensor.upstairs_zone_6_raw_registers

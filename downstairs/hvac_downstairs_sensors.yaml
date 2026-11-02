@@ -5,6 +5,15 @@
 template:
   - sensor:
       # --- ZONE 1: Kitchen ---
+      - name: "Downstairs Zone 1 Temp"
+        unique_id: downstairs_zone_1_temp
+        icon: mdi:thermometer
+        unit_of_measurement: "°F"
+        state: >
+          {% set test_mode = is_state('input_boolean.hvac_downstairs_test_mode', 'on') %}
+          {% set temp_ent = states('input_text.hvac_downstairs_zone_1_temp_entity') %}
+          {{ states('input_number.hvac_downstairs_test_zone_1_temp') | float(70) if test_mode else states(temp_ent) | float(70) | round(1) }}
+
       - name: "Downstairs Zone 1 Error"
         unique_id: downstairs_zone_1_error
         icon: mdi:math-log
@@ -53,6 +62,15 @@ template:
 
 
       # --- ZONE 2: Dining ---
+      - name: "Downstairs Zone 2 Temp"
+        unique_id: downstairs_zone_2_temp
+        icon: mdi:thermometer
+        unit_of_measurement: "°F"
+        state: >
+          {% set test_mode = is_state('input_boolean.hvac_downstairs_test_mode', 'on') %}
+          {% set temp_ent = states('input_text.hvac_downstairs_zone_2_temp_entity') %}
+          {{ states('input_number.hvac_downstairs_test_zone_2_temp') | float(70) if test_mode else states(temp_ent) | float(70) | round(1) }}
+
       - name: "Downstairs Zone 2 Error"
         unique_id: downstairs_zone_2_error
         icon: mdi:math-log
@@ -101,6 +119,15 @@ template:
 
 
       # --- ZONE 3: Living ---
+      - name: "Downstairs Zone 3 Temp"
+        unique_id: downstairs_zone_3_temp
+        icon: mdi:thermometer
+        unit_of_measurement: "°F"
+        state: >
+          {% set test_mode = is_state('input_boolean.hvac_downstairs_test_mode', 'on') %}
+          {% set temp_ent = states('input_text.hvac_downstairs_zone_3_temp_entity') %}
+          {{ states('input_number.hvac_downstairs_test_zone_3_temp') | float(70) if test_mode else states(temp_ent) | float(70) | round(1) }}
+
       - name: "Downstairs Zone 3 Error"
         unique_id: downstairs_zone_3_error
         icon: mdi:math-log
@@ -149,6 +176,15 @@ template:
 
 
       # --- ZONE 4: Office ---
+      - name: "Downstairs Zone 4 Temp"
+        unique_id: downstairs_zone_4_temp
+        icon: mdi:thermometer
+        unit_of_measurement: "°F"
+        state: >
+          {% set test_mode = is_state('input_boolean.hvac_downstairs_test_mode', 'on') %}
+          {% set temp_ent = states('input_text.hvac_downstairs_zone_4_temp_entity') %}
+          {{ states('input_number.hvac_downstairs_test_zone_4_temp') | float(70) if test_mode else states(temp_ent) | float(70) | round(1) }}
+
       - name: "Downstairs Zone 4 Error"
         unique_id: downstairs_zone_4_error
         icon: mdi:math-log
@@ -197,6 +233,15 @@ template:
 
 
       # --- ZONE 5: Stairs ---
+      - name: "Downstairs Zone 5 Temp"
+        unique_id: downstairs_zone_5_temp
+        icon: mdi:thermometer
+        unit_of_measurement: "°F"
+        state: >
+          {% set test_mode = is_state('input_boolean.hvac_downstairs_test_mode', 'on') %}
+          {% set temp_ent = states('input_text.hvac_downstairs_zone_5_temp_entity') %}
+          {{ states('input_number.hvac_downstairs_test_zone_5_temp') | float(70) if test_mode else states(temp_ent) | float(70) | round(1) }}
+
       - name: "Downstairs Zone 5 Error"
         unique_id: downstairs_zone_5_error
         icon: mdi:math-log
