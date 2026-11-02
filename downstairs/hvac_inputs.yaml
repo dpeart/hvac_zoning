@@ -1,0 +1,72 @@
+﻿# ==========================================
+# HVAC DOWNSTAIRS: CONFIGURATION HELPERS
+# ==========================================
+
+input_text:
+  # --- Zone Friendly Names ---
+  hvac_downstairs_zone_1_name:
+    name: "Downstairs Zone 1 Name"
+    initial: "Kitchen"
+    icon: mdi:label
+  hvac_downstairs_zone_2_name:
+    name: "Downstairs Zone 2 Name"
+    initial: "Dining"
+    icon: mdi:label
+  hvac_downstairs_zone_3_name:
+    name: "Downstairs Zone 3 Name"
+    initial: "Living"
+    icon: mdi:label
+  hvac_downstairs_zone_4_name:
+    name: "Downstairs Zone 4 Name"
+    initial: "Office"
+    icon: mdi:label
+  hvac_downstairs_zone_5_name:
+    name: "Downstairs Zone 5 Name"
+    initial: "Stairs"
+    icon: mdi:label
+
+  # --- Zone Temperature & Occupancy Entity IDs ---
+  hvac_downstairs_zone_1_temp_entity:
+    name: "Downstairs Zone 1 Temp Entity ID"
+    initial: "sensor.placeholder_kitchen_temp"
+    icon: mdi:thermometer
+  hvac_downstairs_zone_1_occ_entity:
+    name: "Downstairs Zone 1 Occupancy Entity ID"
+    initial: "binary_sensor.placeholder_kitchen_occupancy"
+    icon: mdi:motion-sensor
+
+  hvac_downstairs_zone_2_temp_entity:
+    name: "Downstairs Zone 2 Temp Entity ID"
+    initial: "sensor.placeholder_dining_temp"
+    icon: mdi:thermometer
+  hvac_downstairs_zone_2_occ_entity:
+    name: "Downstairs Zone 2 Occupancy Entity ID"
+    initial: "binary_sensor.placeholder_dining_occupancy"
+    icon: mdi:motion-sensor
+
+  hvac_downstairs_zone_3_temp_entity:
+    name: "Downstairs Zone 3 Temp Entity ID"
+    initial: "sensor.placeholder_living_temp"
+    icon: mdi:thermometer
+  hvac_downstairs_zone_3_occ_entity:
+    name: "Downstairs Zone 3 Occupancy Entity ID"
+    initial: "binary_sensor.placeholder_living_occupancy"
+    icon: mdi:motion-sensor
+
+  hvac_downstairs_zone_4_temp_entity:
+    name: "Downstairs Zone 4 Temp Entity ID"
+    initial: "sensor.placeholder_office_temp"
+    icon: mdi:thermometer
+  hvac_downstairs_zone_4_occ_entity:
+    name: "Downstairs Zone 4 Occupancy Entity ID"
+    initial: "binary_sensor.placeholder_office_occupancy"
+    icon: mdi:motion-sensor
+
+  hvac_downstairs_zone_5_temp_entity:
+    name: "Downstairs Zone 5 Temp Entity ID"
+    initial: "sensor.downstairs_nativezone_current_temperature"
+    icon: mdi:thermometer
+  hvac_downstairs_zone_5_occ_entity:
+    name: "Downstairs Zone 5 Occupancy Entity ID"
+    initial: "binary_sensor.placeholder_stairs_occupancy"
+    icon: mdi:motion-sensor

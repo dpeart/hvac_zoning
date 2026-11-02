@@ -1,0 +1,196 @@
+﻿automation:
+  - id: downstairs_hvac_control_loop
+    alias: "HVAC Downstairs: Zone Control Loop"
+    description: "Evaluates zone demands, applies minimum airflow constraints, and drives ESPHome damper relays. Runs every 10s in test mode, otherwise on the configured loop interval."
+    trigger:
+      - platform: time_pattern
+        seconds: "/10"
+    condition:
+      - condition: template
+        value_template: >
+          {{ is_state('input_boolean.hvac_downstairs_test_mode', 'on')
+             or (now().timestamp() | int) % states('input_number.hvac_downstairs_zone_loop_interval') | int(90) == 0 }}
+      - condition: template
+        value_template: "{{ states('input_boolean.hvac_downstairs_zoning_enabled') == 'on' }}"
+    mode: single
+    variables:
+      test_mode: "{{ is_state('input_boolean.hvac_downstairs_test_mode', 'on') }}"
+      hvac_action: >
+        {{ iif(test_mode,
+               states('input_select.hvac_downstairs_test_action'),
+               state_attr('climate.downstairs_nativezone', 'hvac_action') | string | lower) }}
+      r1: "{{ states('sensor.downstairs_zone_1_raw_registers') | int(0) }}"
+      r2: "{{ states('sensor.downstairs_zone_2_raw_registers') | int(0) }}"
+      r3: "{{ states('sensor.downstairs_zone_3_raw_registers') | int(0) }}"
+      r4: "{{ states('sensor.downstairs_zone_4_raw_registers') | int(0) }}"
+      r5: "{{ states('sensor.downstairs_zone_5_raw_registers') | int(0) }}"
+      total_demand: "{{ r1 + r2 + r3 + r4 + r5 }}"
+      total_max_registers: 10
+      min_airflow: "{{ states('input_number.hvac_downstairs_min_airflow') | int(1) }}"
+      # Allocate minimum-airflow deficit across zones in priority order,
+      # up to each zone's physical relay capacity: Z1=2, Z2=2, Z3=3, Z4=2, Z5=1.
+      deficit: "{{ [min_airflow - total_demand, 0] | max }}"
+      z1_extra: "{{ [deficit, [2 - r1, 0] | max] | min }}"
+      z2_extra: "{{ [deficit - z1_extra, [2 - r2, 0] | max] | min }}"
+      z3_extra: "{{ [deficit - z1_extra - z2_extra, [3 - r3, 0] | max] | min }}"
+      z4_extra: "{{ [deficit - z1_extra - z2_extra - z3_extra, [2 - r4, 0] | max] | min }}"
+      z5_extra: "{{ [deficit - z1_extra - z2_extra - z3_extra - z4_extra, [1 - r5, 0] | max] | min }}"
+      r1_eff: "{{ r1 + z1_extra }}"
+      r2_eff: "{{ r2 + z2_extra }}"
+      r3_eff: "{{ r3 + z3_extra }}"
+      r4_eff: "{{ r4 + z4_extra }}"
+      r5_eff: "{{ r5 + z5_extra }}"
+    action:
+      - choose:
+          # --- ACTIVE CONDITIONING (Heating or Cooling) ---
+          - conditions:
+              - condition: template
+                value_template: "{{ hvac_action in ['heating', 'cooling'] }}"
+            sequence:
+              - service: system_log.write
+                data:
+                  level: info
+                  message: >
+                    HVAC Downstairs Active Loop: Action={{ hvac_action }},
+                    Zone Demands -> Z1:{{r1}}, Z2:{{r2}}, Z3:{{r3}}, Z4:{{r4}}, Z5:{{r5}}, TotalDemand={{ total_demand }}
+
+              # --- SAFEGUARD: Enforce Minimum Airflow ---
+              - choose:
+                  - conditions: "{{ deficit > 0 }}"
+                    sequence:
+                      - service: system_log.write
+                        data:
+                          level: warning
+                          message: >
+                            HVAC Downstairs Minimum Airflow Enforced: Total demand={{ total_demand }}, Min={{ min_airflow }}, Deficit={{ deficit }}. Effective demands -> Z1:{{r1_eff}}, Z2:{{r2_eff}}, Z3:{{r3_eff}}, Z4:{{r4_eff}}, Z5:{{r5_eff}}.
+
+              # --- ZONE 1: Kitchen (Relays 1, 2) ---
+              - choose:
+                  - conditions: "{{ r1_eff >= 1 }}"
+                    sequence:
+                      - service: homeassistant.turn_off
+                        target:
+                          entity_id: switch.iotmug_2_relay_board_relay_1
+                default:
+                  - service: homeassistant.turn_on
+                    target:
+                      entity_id: switch.iotmug_2_relay_board_relay_1
+              - choose:
+                  - conditions: "{{ r1_eff >= 2 }}"
+                    sequence:
+                      - service: homeassistant.turn_off
+                        target:
+                          entity_id: switch.iotmug_2_relay_board_relay_2
+                default:
+                  - service: homeassistant.turn_on
+                    target:
+                      entity_id: switch.iotmug_2_relay_board_relay_2
+
+              # --- ZONE 2: Dining (Relays 3, 4) ---
+              - choose:
+                  - conditions: "{{ r2_eff >= 1 }}"
+                    sequence:
+                      - service: homeassistant.turn_off
+                        target:
+                          entity_id: switch.iotmug_2_relay_board_relay_3
+                default:
+                  - service: homeassistant.turn_on
+                    target:
+                      entity_id: switch.iotmug_2_relay_board_relay_3
+              - choose:
+                  - conditions: "{{ r2_eff >= 2 }}"
+                    sequence:
+                      - service: homeassistant.turn_off
+                        target:
+                          entity_id: switch.iotmug_2_relay_board_relay_4
+                default:
+                  - service: homeassistant.turn_on
+                    target:
+                      entity_id: switch.iotmug_2_relay_board_relay_4
+
+              # --- ZONE 3: Living (Relays 5, 6, 7) ---
+              - choose:
+                  - conditions: "{{ r3_eff >= 1 }}"
+                    sequence:
+                      - service: homeassistant.turn_off
+                        target:
+                          entity_id: switch.iotmug_2_relay_board_relay_5
+                default:
+                  - service: homeassistant.turn_on
+                    target:
+                      entity_id: switch.iotmug_2_relay_board_relay_5
+              - choose:
+                  - conditions: "{{ r3_eff >= 2 }}"
+                    sequence:
+                      - service: homeassistant.turn_off
+                        target:
+                          entity_id: switch.iotmug_2_relay_board_relay_6
+                default:
+                  - service: homeassistant.turn_on
+                    target:
+                      entity_id: switch.iotmug_2_relay_board_relay_6
+              - choose:
+                  - conditions: "{{ r3_eff >= 3 }}"
+                    sequence:
+                      - service: homeassistant.turn_off
+                        target:
+                          entity_id: switch.iotmug_2_relay_board_relay_7
+                default:
+                  - service: homeassistant.turn_on
+                    target:
+                      entity_id: switch.iotmug_2_relay_board_relay_7
+
+              # --- ZONE 4: Office (Relays 8, 9) ---
+              - choose:
+                  - conditions: "{{ r4_eff >= 1 }}"
+                    sequence:
+                      - service: homeassistant.turn_off
+                        target:
+                          entity_id: switch.iotmug_2_relay_board_relay_8
+                default:
+                  - service: homeassistant.turn_on
+                    target:
+                      entity_id: switch.iotmug_2_relay_board_relay_8
+              - choose:
+                  - conditions: "{{ r4_eff >= 2 }}"
+                    sequence:
+                      - service: homeassistant.turn_off
+                        target:
+                          entity_id: switch.iotmug_2_relay_board_relay_9
+                default:
+                  - service: homeassistant.turn_on
+                    target:
+                      entity_id: switch.iotmug_2_relay_board_relay_9
+
+              # --- ZONE 5: Stairs (Relay 10) ---
+              - choose:
+                  - conditions: "{{ r5_eff >= 1 }}"
+                    sequence:
+                      - service: homeassistant.turn_off
+                        target:
+                          entity_id: switch.iotmug_2_relay_board_relay_10
+                default:
+                  - service: homeassistant.turn_on
+                    target:
+                      entity_id: switch.iotmug_2_relay_board_relay_10
+
+        default:
+          # --- FAILSAFE: OPEN ALL DAMPERS ---
+          - service: homeassistant.turn_off
+            target:
+              entity_id:
+                - switch.iotmug_2_relay_board_relay_1
+                - switch.iotmug_2_relay_board_relay_2
+                - switch.iotmug_2_relay_board_relay_3
+                - switch.iotmug_2_relay_board_relay_4
+                - switch.iotmug_2_relay_board_relay_5
+                - switch.iotmug_2_relay_board_relay_6
+                - switch.iotmug_2_relay_board_relay_7
+                - switch.iotmug_2_relay_board_relay_8
+                - switch.iotmug_2_relay_board_relay_9
+                - switch.iotmug_2_relay_board_relay_10
+          - service: system_log.write
+            data:
+              level: warning
+              message: >
+                HVAC Downstairs Failsafe Active: hvac_action='{{ hvac_action }}'. All dampers opened.

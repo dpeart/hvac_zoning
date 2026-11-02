@@ -1,0 +1,258 @@
+﻿# ==========================================
+# HVAC DOWNSTAIRS: DYNAMIC ZONE SENSORS & MATH
+# ==========================================
+
+template:
+  - sensor:
+      # --- ZONE 1: Kitchen ---
+      - name: "Downstairs Zone 1 Error"
+        unique_id: downstairs_zone_1_error
+        icon: mdi:math-log
+        unit_of_measurement: "°F"
+        state: >
+          {% set test_mode = is_state('input_boolean.hvac_downstairs_test_mode', 'on') %}
+          {% set temp_ent = states('input_text.hvac_downstairs_zone_1_temp_entity') %}
+          {% set target = states('input_number.hvac_downstairs_test_target_temp') | float(72) if test_mode else state_attr('climate.downstairs_nativezone', 'temperature') | float(72) %}
+          {% set current = states('input_number.hvac_downstairs_test_zone_1_temp') | float(70) if test_mode else states(temp_ent) | float(70) %}
+          {% set hvac_action = states('input_select.hvac_downstairs_test_action') if test_mode else state_attr('climate.downstairs_nativezone', 'hvac_action') %}
+          {% if hvac_action == 'cooling' %}
+            {{ (current - target) | round(2) }}
+          {% elif hvac_action == 'heating' %}
+            {{ (target - current) | round(2) }}
+          {% else %}
+            {{ 0.0 }}
+          {% endif %}
+
+      - name: "Downstairs Zone 1 Demand"
+        unique_id: downstairs_zone_1_demand
+        icon: mdi:chart-line
+        state: >
+          {% set error = states('sensor.downstairs_zone_1_error') | float(0) %}
+          {% set db = states('input_number.hvac_downstairs_zone_deadband') | float(0.5) %}
+          {% set sensitivity = states('input_number.hvac_downstairs_zone_sensitivity') | float(1.0) %}
+          {% set occ_ent = states('input_text.hvac_downstairs_zone_1_occ_entity') %}
+          {% set is_occ = is_state(occ_ent, 'on') %}
+          {% set w_occ = states('input_number.hvac_downstairs_zone_weight_occupied') | float(1.0) %}
+          {% set w_unocc = states('input_number.hvac_downstairs_zone_weight_unoccupied') | float(0.8) %}
+          {% if error <= db %}
+            {{ 0.0 }}
+          {% else %}
+            {% set raw_demand = (error - db) / sensitivity %}
+            {% set raw_demand = [raw_demand, 1.0] | min %}
+            {% set multiplier = w_occ if is_occ else w_unocc %}
+            {{ (raw_demand * multiplier) | round(2) }}
+          {% endif %}
+
+      - name: "Downstairs Zone 1 Raw Registers"
+        unique_id: downstairs_zone_1_raw_registers
+        icon: mdi:air-filter
+        state: >
+          {% set demand = states('sensor.downstairs_zone_1_demand') | float(0) %}
+          {% set n_reg = states('input_number.hvac_downstairs_zone_1_registers') | float(2) %}
+          {{ (demand * n_reg) | round(0, 'ceil') | int }}
+
+
+      # --- ZONE 2: Dining ---
+      - name: "Downstairs Zone 2 Error"
+        unique_id: downstairs_zone_2_error
+        icon: mdi:math-log
+        unit_of_measurement: "°F"
+        state: >
+          {% set test_mode = is_state('input_boolean.hvac_downstairs_test_mode', 'on') %}
+          {% set temp_ent = states('input_text.hvac_downstairs_zone_2_temp_entity') %}
+          {% set target = states('input_number.hvac_downstairs_test_target_temp') | float(72) if test_mode else state_attr('climate.downstairs_nativezone', 'temperature') | float(72) %}
+          {% set current = states('input_number.hvac_downstairs_test_zone_2_temp') | float(70) if test_mode else states(temp_ent) | float(70) %}
+          {% set hvac_action = states('input_select.hvac_downstairs_test_action') if test_mode else state_attr('climate.downstairs_nativezone', 'hvac_action') %}
+          {% if hvac_action == 'cooling' %}
+            {{ (current - target) | round(2) }}
+          {% elif hvac_action == 'heating' %}
+            {{ (target - current) | round(2) }}
+          {% else %}
+            {{ 0.0 }}
+          {% endif %}
+
+      - name: "Downstairs Zone 2 Demand"
+        unique_id: downstairs_zone_2_demand
+        icon: mdi:chart-line
+        state: >
+          {% set error = states('sensor.downstairs_zone_2_error') | float(0) %}
+          {% set db = states('input_number.hvac_downstairs_zone_deadband') | float(0.5) %}
+          {% set sensitivity = states('input_number.hvac_downstairs_zone_sensitivity') | float(1.0) %}
+          {% set occ_ent = states('input_text.hvac_downstairs_zone_2_occ_entity') %}
+          {% set is_occ = is_state(occ_ent, 'on') %}
+          {% set w_occ = states('input_number.hvac_downstairs_zone_weight_occupied') | float(1.0) %}
+          {% set w_unocc = states('input_number.hvac_downstairs_zone_weight_unoccupied') | float(0.8) %}
+          {% if error <= db %}
+            {{ 0.0 }}
+          {% else %}
+            {% set raw_demand = (error - db) / sensitivity %}
+            {% set raw_demand = [raw_demand, 1.0] | min %}
+            {% set multiplier = w_occ if is_occ else w_unocc %}
+            {{ (raw_demand * multiplier) | round(2) }}
+          {% endif %}
+
+      - name: "Downstairs Zone 2 Raw Registers"
+        unique_id: downstairs_zone_2_raw_registers
+        icon: mdi:air-filter
+        state: >
+          {% set demand = states('sensor.downstairs_zone_2_demand') | float(0) %}
+          {% set n_reg = states('input_number.hvac_downstairs_zone_2_registers') | float(2) %}
+          {{ (demand * n_reg) | round(0, 'ceil') | int }}
+
+
+      # --- ZONE 3: Living ---
+      - name: "Downstairs Zone 3 Error"
+        unique_id: downstairs_zone_3_error
+        icon: mdi:math-log
+        unit_of_measurement: "°F"
+        state: >
+          {% set test_mode = is_state('input_boolean.hvac_downstairs_test_mode', 'on') %}
+          {% set temp_ent = states('input_text.hvac_downstairs_zone_3_temp_entity') %}
+          {% set target = states('input_number.hvac_downstairs_test_target_temp') | float(72) if test_mode else state_attr('climate.downstairs_nativezone', 'temperature') | float(72) %}
+          {% set current = states('input_number.hvac_downstairs_test_zone_3_temp') | float(70) if test_mode else states(temp_ent) | float(70) %}
+          {% set hvac_action = states('input_select.hvac_downstairs_test_action') if test_mode else state_attr('climate.downstairs_nativezone', 'hvac_action') %}
+          {% if hvac_action == 'cooling' %}
+            {{ (current - target) | round(2) }}
+          {% elif hvac_action == 'heating' %}
+            {{ (target - current) | round(2) }}
+          {% else %}
+            {{ 0.0 }}
+          {% endif %}
+
+      - name: "Downstairs Zone 3 Demand"
+        unique_id: downstairs_zone_3_demand
+        icon: mdi:chart-line
+        state: >
+          {% set error = states('sensor.downstairs_zone_3_error') | float(0) %}
+          {% set db = states('input_number.hvac_downstairs_zone_deadband') | float(0.5) %}
+          {% set sensitivity = states('input_number.hvac_downstairs_zone_sensitivity') | float(1.0) %}
+          {% set occ_ent = states('input_text.hvac_downstairs_zone_3_occ_entity') %}
+          {% set is_occ = is_state(occ_ent, 'on') %}
+          {% set w_occ = states('input_number.hvac_downstairs_zone_weight_occupied') | float(1.0) %}
+          {% set w_unocc = states('input_number.hvac_downstairs_zone_weight_unoccupied') | float(0.8) %}
+          {% if error <= db %}
+            {{ 0.0 }}
+          {% else %}
+            {% set raw_demand = (error - db) / sensitivity %}
+            {% set raw_demand = [raw_demand, 1.0] | min %}
+            {% set multiplier = w_occ if is_occ else w_unocc %}
+            {{ (raw_demand * multiplier) | round(2) }}
+          {% endif %}
+
+      - name: "Downstairs Zone 3 Raw Registers"
+        unique_id: downstairs_zone_3_raw_registers
+        icon: mdi:air-filter
+        state: >
+          {% set demand = states('sensor.downstairs_zone_3_demand') | float(0) %}
+          {% set n_reg = states('input_number.hvac_downstairs_zone_3_registers') | float(3) %}
+          {{ (demand * n_reg) | round(0, 'ceil') | int }}
+
+
+      # --- ZONE 4: Office ---
+      - name: "Downstairs Zone 4 Error"
+        unique_id: downstairs_zone_4_error
+        icon: mdi:math-log
+        unit_of_measurement: "°F"
+        state: >
+          {% set test_mode = is_state('input_boolean.hvac_downstairs_test_mode', 'on') %}
+          {% set temp_ent = states('input_text.hvac_downstairs_zone_4_temp_entity') %}
+          {% set target = states('input_number.hvac_downstairs_test_target_temp') | float(72) if test_mode else state_attr('climate.downstairs_nativezone', 'temperature') | float(72) %}
+          {% set current = states('input_number.hvac_downstairs_test_zone_4_temp') | float(70) if test_mode else states(temp_ent) | float(70) %}
+          {% set hvac_action = states('input_select.hvac_downstairs_test_action') if test_mode else state_attr('climate.downstairs_nativezone', 'hvac_action') %}
+          {% if hvac_action == 'cooling' %}
+            {{ (current - target) | round(2) }}
+          {% elif hvac_action == 'heating' %}
+            {{ (target - current) | round(2) }}
+          {% else %}
+            {{ 0.0 }}
+          {% endif %}
+
+      - name: "Downstairs Zone 4 Demand"
+        unique_id: downstairs_zone_4_demand
+        icon: mdi:chart-line
+        state: >
+          {% set error = states('sensor.downstairs_zone_4_error') | float(0) %}
+          {% set db = states('input_number.hvac_downstairs_zone_deadband') | float(0.5) %}
+          {% set sensitivity = states('input_number.hvac_downstairs_zone_sensitivity') | float(1.0) %}
+          {% set occ_ent = states('input_text.hvac_downstairs_zone_4_occ_entity') %}
+          {% set is_occ = is_state(occ_ent, 'on') %}
+          {% set w_occ = states('input_number.hvac_downstairs_zone_weight_occupied') | float(1.0) %}
+          {% set w_unocc = states('input_number.hvac_downstairs_zone_weight_unoccupied') | float(0.8) %}
+          {% if error <= db %}
+            {{ 0.0 }}
+          {% else %}
+            {% set raw_demand = (error - db) / sensitivity %}
+            {% set raw_demand = [raw_demand, 1.0] | min %}
+            {% set multiplier = w_occ if is_occ else w_unocc %}
+            {{ (raw_demand * multiplier) | round(2) }}
+          {% endif %}
+
+      - name: "Downstairs Zone 4 Raw Registers"
+        unique_id: downstairs_zone_4_raw_registers
+        icon: mdi:air-filter
+        state: >
+          {% set demand = states('sensor.downstairs_zone_4_demand') | float(0) %}
+          {% set n_reg = states('input_number.hvac_downstairs_zone_4_registers') | float(2) %}
+          {{ (demand * n_reg) | round(0, 'ceil') | int }}
+
+
+      # --- ZONE 5: Stairs ---
+      - name: "Downstairs Zone 5 Error"
+        unique_id: downstairs_zone_5_error
+        icon: mdi:math-log
+        unit_of_measurement: "°F"
+        state: >
+          {% set test_mode = is_state('input_boolean.hvac_downstairs_test_mode', 'on') %}
+          {% set temp_ent = states('input_text.hvac_downstairs_zone_5_temp_entity') %}
+          {% set target = states('input_number.hvac_downstairs_test_target_temp') | float(72) if test_mode else state_attr('climate.downstairs_nativezone', 'temperature') | float(72) %}
+          {% set current = states('input_number.hvac_downstairs_test_zone_5_temp') | float(70) if test_mode else states(temp_ent) | float(70) %}
+          {% set hvac_action = states('input_select.hvac_downstairs_test_action') if test_mode else state_attr('climate.downstairs_nativezone', 'hvac_action') %}
+          {% if hvac_action == 'cooling' %}
+            {{ (current - target) | round(2) }}
+          {% elif hvac_action == 'heating' %}
+            {{ (target - current) | round(2) }}
+          {% else %}
+            {{ 0.0 }}
+          {% endif %}
+
+      - name: "Downstairs Zone 5 Demand"
+        unique_id: downstairs_zone_5_demand
+        icon: mdi:chart-line
+        state: >
+          {% set error = states('sensor.downstairs_zone_5_error') | float(0) %}
+          {% set db = states('input_number.hvac_downstairs_zone_deadband') | float(0.5) %}
+          {% set sensitivity = states('input_number.hvac_downstairs_zone_sensitivity') | float(1.0) %}
+          {% set occ_ent = states('input_text.hvac_downstairs_zone_5_occ_entity') %}
+          {% set is_occ = is_state(occ_ent, 'on') %}
+          {% set w_occ = states('input_number.hvac_downstairs_zone_weight_occupied') | float(1.0) %}
+          {% set w_unocc = states('input_number.hvac_downstairs_zone_weight_unoccupied') | float(0.8) %}
+          {% if error <= db %}
+            {{ 0.0 }}
+          {% else %}
+            {% set raw_demand = (error - db) / sensitivity %}
+            {% set raw_demand = [raw_demand, 1.0] | min %}
+            {% set multiplier = w_occ if is_occ else w_unocc %}
+            {{ (raw_demand * multiplier) | round(2) }}
+          {% endif %}
+
+      - name: "Downstairs Zone 5 Raw Registers"
+        unique_id: downstairs_zone_5_raw_registers
+        icon: mdi:air-filter
+        state: >
+          {% set demand = states('sensor.downstairs_zone_5_demand') | float(0) %}
+          {% set n_reg = states('input_number.hvac_downstairs_zone_5_registers') | float(1) %}
+          {{ (demand * n_reg) | round(0, 'ceil') | int }}
+
+
+      # --- TOTAL DEMAND (Sum of all zones) ---
+      - name: "Downstairs Total Demand"
+        unique_id: downstairs_total_demand
+        icon: mdi:chart-bar
+        unit_of_measurement: "registers"
+        state: >
+          {% set z1 = states('sensor.downstairs_zone_1_raw_registers') | int(0) %}
+          {% set z2 = states('sensor.downstairs_zone_2_raw_registers') | int(0) %}
+          {% set z3 = states('sensor.downstairs_zone_3_raw_registers') | int(0) %}
+          {% set z4 = states('sensor.downstairs_zone_4_raw_registers') | int(0) %}
+          {% set z5 = states('sensor.downstairs_zone_5_raw_registers') | int(0) %}
+          {{ (z1 + z2 + z3 + z4 + z5) | int }}

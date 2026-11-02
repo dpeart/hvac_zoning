@@ -1,0 +1,120 @@
+﻿# ==========================================
+# HVAC DOWNSTAIRS: TEST/DEBUG MODE CONTROLS
+# ==========================================
+# When test mode is ON, the automation uses the
+# temp/action values below instead of real sensors.
+
+input_boolean:
+  hvac_downstairs_test_mode:
+    name: "HVAC Downstairs Test Mode"
+    initial: off
+    icon: mdi:test-tube
+
+input_number:
+  # --- Register Counts per Zone (Matching Physical Dampers) ---
+  hvac_downstairs_zone_1_registers:
+    name: "Downstairs Zone 1 (Kitchen) Registers"
+    min: 1
+    max: 5
+    step: 1
+    initial: 2
+    icon: mdi:air-filter
+
+  hvac_downstairs_zone_2_registers:
+    name: "Downstairs Zone 2 (Dining) Registers"
+    min: 1
+    max: 5
+    step: 1
+    initial: 2
+    icon: mdi:air-filter
+
+  hvac_downstairs_zone_3_registers:
+    name: "Downstairs Zone 3 (Living) Registers"
+    min: 1
+    max: 5
+    step: 1
+    initial: 3
+    icon: mdi:air-filter
+
+  hvac_downstairs_zone_4_registers:
+    name: "Downstairs Zone 4 (Office) Registers"
+    min: 1
+    max: 5
+    step: 1
+    initial: 2
+    icon: mdi:air-filter
+
+  hvac_downstairs_zone_5_registers:
+    name: "Downstairs Zone 5 (Stairs) Registers"
+    min: 1
+    max: 5
+    step: 1
+    initial: 1
+    icon: mdi:air-filter
+
+  # --- Test Bench: Target Temperature ---
+  hvac_downstairs_test_target_temp:
+    name: "Test: Downstairs Target Temperature"
+    min: 50
+    max: 90
+    step: 0.1
+    initial: 72
+    unit_of_measurement: "°F"
+    icon: mdi:thermometer
+
+  # --- Test Bench: Per-Zone Current Temps ---
+  hvac_downstairs_test_zone_1_temp:
+    name: "Test: Zone 1 (Kitchen) Temp"
+    min: 50
+    max: 90
+    step: 0.1
+    initial: 72
+    unit_of_measurement: "°F"
+    icon: mdi:thermometer
+
+  hvac_downstairs_test_zone_2_temp:
+    name: "Test: Zone 2 (Dining) Temp"
+    min: 50
+    max: 90
+    step: 0.1
+    initial: 72
+    unit_of_measurement: "°F"
+    icon: mdi:thermometer
+
+  hvac_downstairs_test_zone_3_temp:
+    name: "Test: Zone 3 (Living) Temp"
+    min: 50
+    max: 90
+    step: 0.1
+    initial: 72
+    unit_of_measurement: "°F"
+    icon: mdi:thermometer
+
+  hvac_downstairs_test_zone_4_temp:
+    name: "Test: Zone 4 (Office) Temp"
+    min: 50
+    max: 90
+    step: 0.1
+    initial: 72
+    unit_of_measurement: "°F"
+    icon: mdi:thermometer
+
+  hvac_downstairs_test_zone_5_temp:
+    name: "Test: Zone 5 (Stairs) Temp"
+    min: 50
+    max: 90
+    step: 0.1
+    initial: 72
+    unit_of_measurement: "°F"
+    icon: mdi:thermometer
+
+input_select:
+  hvac_downstairs_test_action:
+    name: "Test: Downstairs HVAC Action"
+    options:
+      - heating
+      - cooling
+      - idle
+      - "off"
+    initial: idle
+    icon: mdi:thermostat

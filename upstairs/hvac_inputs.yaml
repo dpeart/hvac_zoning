@@ -1,0 +1,152 @@
+# ==========================================
+# HVAC UPSTAIRS: CONFIGURATION HELPERS
+# ==========================================
+
+input_number:
+  # --- Register Counts per Zone (Matching Physical Dampers) ---
+  upstairs_hvac_zone_1_registers:
+    name: "Upstairs Zone 1 (Stairs) Registers"
+    min: 1
+    max: 5
+    step: 1
+    initial: 1
+    icon: mdi:air-filter
+
+  upstairs_hvac_zone_2_registers:
+    name: "Upstairs Zone 2 (Bed 1) Registers"
+    min: 1
+    max: 5
+    step: 1
+    initial: 3
+    icon: mdi:air-filter
+
+  upstairs_hvac_zone_3_registers:
+    name: "Upstairs Zone 3 (Bed 2) Registers"
+    min: 1
+    max: 5
+    step: 1
+    initial: 2
+    icon: mdi:air-filter
+
+  upstairs_hvac_zone_4_registers:
+    name: "Upstairs Zone 4 (Bed 3) Registers"
+    min: 1
+    max: 5
+    step: 1
+    initial: 1
+    icon: mdi:air-filter
+
+  upstairs_hvac_zone_5_registers:
+    name: "Upstairs Zone 5 (Master Bed) Registers"
+    min: 1
+    max: 5
+    step: 1
+    initial: 3
+    icon: mdi:air-filter
+
+  upstairs_hvac_zone_6_registers:
+    name: "Upstairs Zone 6 (Master Bath) Registers"
+    min: 1
+    max: 5
+    step: 1
+    initial: 3
+    icon: mdi:air-filter
+
+  # --- Workbench Test Slider ---
+  hvac_zone_5_test_temp:
+    name: "Zone 5 Master Bed Test Temp"
+    min: 50
+    max: 90
+    step: 0.5
+    initial: 72
+    unit_of_measurement: "°F"
+    icon: mdi:thermometer-lines
+
+input_text:
+  # --- Zone Friendly Names ---
+  upstairs_hvac_zone_1_name:
+    name: "Upstairs Zone 1 Name"
+    initial: "Stairs (Thermostat/Return)"
+    icon: mdi:label
+  upstairs_hvac_zone_2_name:
+    name: "Upstairs Zone 2 Name"
+    initial: "Bed 1"
+    icon: mdi:label
+  upstairs_hvac_zone_3_name:
+    name: "Upstairs Zone 3 Name"
+    initial: "Bed 2"
+    icon: mdi:label
+  upstairs_hvac_zone_4_name:
+    name: "Upstairs Zone 4 Name"
+    initial: "Bed 3"
+    icon: mdi:label
+  upstairs_hvac_zone_5_name:
+    name: "Upstairs Zone 5 Name"
+    initial: "Master Bed"
+    icon: mdi:label
+  upstairs_hvac_zone_6_name:
+    name: "Upstairs Zone 6 Name"
+    initial: "Master Bath"
+    icon: mdi:label
+
+  # --- Zone Temperature & Occupancy Entity IDs ---
+  
+  # Zone 1: Stairs (Thermostat / Return Reference)
+  upstairs_hvac_zone_1_temp_entity:
+    name: "Upstairs Zone 1 Temp Entity ID"
+    initial: "sensor.upstairs_nativezone_current_temperature"
+    icon: mdi:thermometer
+  upstairs_hvac_zone_1_occ_entity:
+    name: "Upstairs Zone 1 Occupancy Entity ID"
+    initial: "binary_sensor.placeholder_stairs_occupancy"
+    icon: mdi:motion-sensor
+
+  # Zone 2: Bed 1 (Tri-Sensor)
+  upstairs_hvac_zone_2_temp_entity:
+    name: "Upstairs Zone 2 Temp Entity ID"
+    initial: "sensor.trisensor_8_air_temperature"
+    icon: mdi:thermometer
+  upstairs_hvac_zone_2_occ_entity:
+    name: "Upstairs Zone 2 Occupancy Entity ID"
+    initial: "binary_sensor.trisensor_8_occupancy"
+    icon: mdi:motion-sensor
+
+  # Zone 3: Bed 2 (Third Reality)
+  upstairs_hvac_zone_3_temp_entity:
+    name: "Upstairs Zone 3 Temp Entity ID"
+    initial: "sensor.third_reality_inc_3rths0224z_temperature"
+    icon: mdi:thermometer
+  upstairs_hvac_zone_3_occ_entity:
+    name: "Upstairs Zone 3 Occupancy Entity ID"
+    initial: "binary_sensor.placeholder_bed2_occupancy"
+    icon: mdi:motion-sensor
+
+  # Zone 4: Bed 3
+  upstairs_hvac_zone_4_temp_entity:
+    name: "Upstairs Zone 4 Temp Entity ID"
+    initial: "sensor.placeholder_bed3_temp"
+    icon: mdi:thermometer
+  upstairs_hvac_zone_4_occ_entity:
+    name: "Upstairs Zone 4 Occupancy Entity ID"
+    initial: "binary_sensor.placeholder_bed3_occupancy"
+    icon: mdi:motion-sensor
+
+  # Zone 5: Master Bed (Thermostat / Return Reference)
+  upstairs_hvac_zone_5_temp_entity:
+    name: "Upstairs Zone 5 Temp Entity ID"
+    initial: "sensor.upstairs_nativezone_current_temperature"
+    icon: mdi:thermometer
+  upstairs_hvac_zone_5_occ_entity:
+    name: "Upstairs Zone 5 Occupancy Entity ID"
+    initial: "binary_sensor.placeholder_masterbed_occupancy"
+    icon: mdi:motion-sensor
+
+  # Zone 6: Master Bath
+  upstairs_hvac_zone_6_temp_entity:
+    name: "Upstairs Zone 6 Temp Entity ID"
+    initial: "sensor.placeholder_masterbath_temp"
+    icon: mdi:thermometer
+  upstairs_hvac_zone_6_occ_entity:
+    name: "Upstairs Zone 6 Occupancy Entity ID"
+    initial: "binary_sensor.placeholder_masterbath_occupancy"
+    icon: mdi:motion-sensor

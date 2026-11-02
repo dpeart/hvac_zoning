@@ -1,0 +1,132 @@
+﻿# HVAC UPSTAIRS: TEST/DEBUG MODE CONTROLS
+# ==========================================
+# When test mode is ON, the automation uses the
+# slider values below instead of the real sensor data.
+
+input_boolean:
+  hvac_test_mode:
+    name: "HVAC Test Mode"
+    initial: off
+    icon: mdi:test-tube
+
+input_number:
+  hvac_test_zone_1_registers:
+    name: "Test: Zone 1 (Stairs) Registers"
+    min: 0
+    max: 13
+    step: 1
+    initial: 0
+    icon: mdi:air-filter
+
+  hvac_test_zone_2_registers:
+    name: "Test: Zone 2 (Bed 1) Registers"
+    min: 0
+    max: 13
+    step: 1
+    initial: 0
+    icon: mdi:air-filter
+
+  hvac_test_zone_3_registers:
+    name: "Test: Zone 3 (Bed 2) Registers"
+    min: 0
+    max: 13
+    step: 1
+    initial: 0
+    icon: mdi:air-filter
+
+  hvac_test_zone_4_registers:
+    name: "Test: Zone 4 (Bed 3) Registers"
+    min: 0
+    max: 13
+    step: 1
+    initial: 0
+    icon: mdi:air-filter
+
+  hvac_test_zone_5_registers:
+    name: "Test: Zone 5 (Master Bed) Registers"
+    min: 0
+    max: 13
+    step: 1
+    initial: 0
+    icon: mdi:air-filter
+
+  hvac_test_zone_6_registers:
+    name: "Test: Zone 6 (Master Bath) Registers"
+    min: 0
+    max: 13
+    step: 1
+    initial: 0
+    icon: mdi:air-filter
+
+  hvac_test_target_temp:
+    name: "Test: Target Temperature"
+    min: 50
+    max: 90
+    step: 0.1
+    initial: 72
+    unit_of_measurement: "°F"
+    icon: mdi:thermometer
+  hvac_test_zone_1_temp:
+    name: "Test: Zone 1 (Stairs) Temp"
+    min: 50
+    max: 90
+    step: 0.1
+    initial: 72
+    unit_of_measurement: "°F"
+    icon: mdi:thermometer
+
+  hvac_test_zone_2_temp:
+    name: "Test: Zone 2 (Bed 1) Temp"
+    min: 50
+    max: 90
+    step: 0.1
+    initial: 72
+    unit_of_measurement: "°F"
+    icon: mdi:thermometer
+
+  hvac_test_zone_3_temp:
+    name: "Test: Zone 3 (Bed 2) Temp"
+    min: 50
+    max: 90
+    step: 0.1
+    initial: 72
+    unit_of_measurement: "°F"
+    icon: mdi:thermometer
+
+  hvac_test_zone_4_temp:
+    name: "Test: Zone 4 (Bed 3) Temp"
+    min: 50
+    max: 90
+    step: 0.1
+    initial: 72
+    unit_of_measurement: "°F"
+    icon: mdi:thermometer
+
+  hvac_test_zone_5_temp:
+    name: "Test: Zone 5 (Master Bed) Temp"
+    min: 50
+    max: 90
+    step: 0.1
+    initial: 72
+    unit_of_measurement: "°F"
+    icon: mdi:thermometer
+
+  hvac_test_zone_6_temp:
+    name: "Test: Zone 6 (Master Bath) Temp"
+    min: 50
+    max: 90
+    step: 0.1
+    initial: 72
+    unit_of_measurement: "°F"
+    icon: mdi:thermometer
+
+input_select:
+  hvac_test_action:
+    name: "Test: HVAC Action"
+    options:
+      - heating
+      - cooling
+      - idle
+      - "off"
+    initial: idle
+    icon: mdi:thermostat

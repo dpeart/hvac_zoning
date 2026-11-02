@@ -1,0 +1,64 @@
+# ==========================================
+# HVAC ZONING: GLOBAL TUNING KNOBS & HELPERS
+# ==========================================
+
+input_number:
+  # Thermal Deadband (e.g., 0.5°F)
+  hvac_zone_deadband:
+    name: HVAC Zone Deadband
+    min: 0.1
+    max: 2.0
+    step: 0.1
+    unit_of_measurement: "°F"
+    icon: mdi:thermometer-lines
+
+  # Sensitivity Constant (Scale for error to demand)
+  hvac_zone_sensitivity:
+    name: HVAC Zone Sensitivity
+    min: 0.5
+    max: 3.0
+    step: 0.1
+    icon: mdi:tune
+
+  # Occupied Weight Multiplier
+  hvac_zone_weight_occupied:
+    name: HVAC Zone Weight (Occupied)
+    min: 1.0
+    max: 2.0
+    step: 0.05
+    initial: 1.0
+    icon: mdi:account-check
+
+  # Unoccupied Weight Multiplier
+  hvac_zone_weight_unoccupied:
+    name: HVAC Zone Weight (Unoccupied)
+    min: 0.2
+    max: 1.0
+    step: 0.05
+    initial: 1.0
+    icon: mdi:account-off
+
+  # Loop Execution Interval (Seconds - default 90s)
+  hvac_zone_loop_interval:
+    name: HVAC Zone Loop Interval
+    min: 10
+    max: 300
+    step: 10
+    unit_of_measurement: "s"
+    icon: mdi:timer-outline
+
+  # Minimum Airflow (in register equivalents) to maintain during heating/cooling
+  hvac_min_airflow:
+    name: HVAC Minimum Airflow (Registers)
+    min: 1
+    max: 13
+    step: 1
+    initial: 1
+    unit_of_measurement: "registers"
+    icon: mdi:air-filter
+
+input_boolean:
+  # Master toggle to enable/disable the custom zoning system entirely
+  hvac_zoning_enabled:
+    name: HVAC Zoning System Enabled
+    icon: mdi:power

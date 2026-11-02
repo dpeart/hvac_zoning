@@ -1,0 +1,204 @@
+﻿title: "HVAC Downstairs"
+path: hvac-downstairs
+views:
+  - title: Zoning
+    icon: mdi:air-filter
+    cards:
+      # ---------- ALWAYS ON ----------
+      - type: horizontal-stack
+        cards:
+          - type: thermostat
+            entity: climate.downstairs_nativezone
+          - type: entity
+            entity: input_boolean.hvac_downstairs_zoning_enabled
+            name: Zoning
+            icon: mdi:power
+          - type: entity
+            entity: input_boolean.hvac_downstairs_test_mode
+            name: Test Mode
+            icon: mdi:test-tube
+
+      # ---------- ZONE MATH (always visible; test-aware sensors) ----------
+      - type: grid
+        columns: 3
+        square: false
+        cards:
+          - type: entities
+            title: "Z1 · Kitchen"
+            show_header_toggle: false
+            entities:
+              - sensor.downstairs_zone_1_error
+              - sensor.downstairs_zone_1_demand
+              - sensor.downstairs_zone_1_raw_registers
+          - type: entities
+            title: "Z2 · Dining"
+            show_header_toggle: false
+            entities:
+              - sensor.downstairs_zone_2_error
+              - sensor.downstairs_zone_2_demand
+              - sensor.downstairs_zone_2_raw_registers
+          - type: entities
+            title: "Z3 · Living"
+            show_header_toggle: false
+            entities:
+              - sensor.downstairs_zone_3_error
+              - sensor.downstairs_zone_3_demand
+              - sensor.downstairs_zone_3_raw_registers
+          - type: entities
+            title: "Z4 · Office"
+            show_header_toggle: false
+            entities:
+              - sensor.downstairs_zone_4_error
+              - sensor.downstairs_zone_4_demand
+              - sensor.downstairs_zone_4_raw_registers
+          - type: entities
+            title: "Z5 · Stairs"
+            show_header_toggle: false
+            entities:
+              - sensor.downstairs_zone_5_error
+              - sensor.downstairs_zone_5_demand
+              - sensor.downstairs_zone_5_raw_registers
+
+      # ---------- PRODUCTION ONLY: history ----------
+      - type: conditional
+        conditions:
+          - condition: state
+            entity: input_boolean.hvac_downstairs_test_mode
+            state_not: "on"
+        card:
+          type: history-graph
+          title: Demand (last hour)
+          hours_to_show: 1
+          entities:
+            - sensor.downstairs_total_demand
+            - sensor.downstairs_zone_1_raw_registers
+            - sensor.downstairs_zone_2_raw_registers
+            - sensor.downstairs_zone_3_raw_registers
+            - sensor.downstairs_zone_4_raw_registers
+            - sensor.downstairs_zone_5_raw_registers
+
+      # ---------- PRODUCTION ONLY: zone sensor wiring ----------
+      - type: conditional
+        conditions:
+          - condition: state
+            entity: input_boolean.hvac_downstairs_test_mode
+            state_not: "on"
+        card:
+          type: entities
+          title: Zone Temperature Sensors
+          show_header_toggle: false
+          entities:
+            - entity: input_text.hvac_downstairs_zone_1_temp_entity
+              name: Z1 Kitchen
+            - entity: input_text.hvac_downstairs_zone_2_temp_entity
+              name: Z2 Dining
+            - entity: input_text.hvac_downstairs_zone_3_temp_entity
+              name: Z3 Living
+            - entity: input_text.hvac_downstairs_zone_4_temp_entity
+              name: Z4 Office
+            - entity: input_text.hvac_downstairs_zone_5_temp_entity
+              name: Z5 Stairs
+
+      # ---------- TEST ONLY: bench inputs ----------
+      - type: conditional
+        conditions:
+          - condition: state
+            entity: input_boolean.hvac_downstairs_test_mode
+            state: "on"
+        card:
+          type: vertical-stack
+          cards:
+            - type: horizontal-stack
+              cards:
+                - type: entity
+                  entity: input_select.hvac_downstairs_test_action
+                  name: Test Action
+                - type: entity
+                  entity: input_number.hvac_downstairs_test_target_temp
+                  name: Test Target
+            - type: grid
+              columns: 3
+              square: false
+              cards:
+                - type: entity
+                  entity: input_number.hvac_downstairs_test_zone_1_temp
+                  name: Z1 Kitchen Temp
+                - type: entity
+                  entity: input_number.hvac_downstairs_test_zone_2_temp
+                  name: Z2 Dining Temp
+                - type: entity
+                  entity: input_number.hvac_downstairs_test_zone_3_temp
+                  name: Z3 Living Temp
+                - type: entity
+                  entity: input_number.hvac_downstairs_test_zone_4_temp
+                  name: Z4 Office Temp
+                - type: entity
+                  entity: input_number.hvac_downstairs_test_zone_5_temp
+                  name: Z5 Stairs Temp
+            - type: button
+              name: Run Zone Loop Now
+              icon: mdi:play-circle
+              show_icon: true
+              show_name: true
+              tap_action:
+                action: perform-action
+                perform_action: automation.trigger
+                target:
+                  entity_id: automation.hvac_downstairs_zone_control_loop
+                data:
+                  skip_condition: true
+
+      # ---------- TUNING (always available) ----------
+      - type: entities
+        title: Tuning
+        show_header_toggle: false
+        entities:
+          - entity: input_number.hvac_downstairs_min_airflow
+            name: Min Airflow
+          - entity: input_number.hvac_downstairs_zone_sensitivity
+            name: Sensitivity
+          - entity: input_number.hvac_downstairs_zone_deadband
+            name: Deadband
+          - entity: input_number.hvac_downstairs_zone_weight_occupied
+            name: Weight · Occupied
+          - entity: input_number.hvac_downstairs_zone_weight_unoccupied
+            name: Weight · Unoccupied
+          - entity: input_number.hvac_downstairs_zone_loop_interval
+            name: Loop Interval
+
+      # ---------- OUTPUTS (always: this is what the loop actually did) ----------
+      - type: glance
+        title: "Dampers (relay ON = closed, OFF = open)"
+        columns: 5
+        entities:
+          - { entity: switch.iotmug_2_relay_board_relay_1,  name: Kitchen-a }
+          - { entity: switch.iotmug_2_relay_board_relay_2,  name: Kitchen-b }
+          - { entity: switch.iotmug_2_relay_board_relay_3,  name: Dining-a }
+          - { entity: switch.iotmug_2_relay_board_relay_4,  name: Dining-b }
+          - { entity: switch.iotmug_2_relay_board_relay_5,  name: Living-a }
+          - { entity: switch.iotmug_2_relay_board_relay_6,  name: Living-b }
+          - { entity: switch.iotmug_2_relay_board_relay_7,  name: Living-c }
+          - { entity: switch.iotmug_2_relay_board_relay_8,  name: Office-a }
+          - { entity: switch.iotmug_2_relay_board_relay_9,  name: Office-b }
+          - { entity: switch.iotmug_2_relay_board_relay_10, name: Stairs }
+
+      - type: gauge
+        entity: sensor.downstairs_total_demand
+        name: Total Demand
+        min: 0
+        max: 10
+        severity: { green: 0, yellow: 4, red: 8 }
+
+      - type: entities
+        title: Last Automation Run
+        show_header_toggle: false
+        entities:
+          - entity: automation.hvac_downstairs_zone_control_loop
+            name: Loop
+            secondary_info: last-triggered
+      - type: logbook
+        title: Recent Activity
+        hours_to_show: 2
+        max_lines: 20
+        entities:
+          - automation.hvac_downstairs_zone_control_loop
