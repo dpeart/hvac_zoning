@@ -1,4 +1,4 @@
-# HVAC Zoning System — Home Assistant Package
+﻿# HVAC Zoning System — Home Assistant Package
 
 ## Project Overview
 
@@ -7,7 +7,7 @@ This is a **zoned HVAC control system** for a two-story home, implemented as a H
 The system has two operational modes:
 
 1. **Production mode** — reads real zone temperatures and the real thermostat state, computes per-zone demand, and drives the dampers accordingly.
-2. **Test mode** — replaces sensor inputs with manual sliders (per-zone temps, target temp, action) so the whole demand→register→relay pipeline can be exercised and validated without physical sensors, at a fast 10-second cadence.
+2. **Test mode** — initializes the per-zone temperature sliders from their assigned live sensors upon entry, then uses those sliders (along with test target/action) so the whole demand→register→relay pipeline can be exercised and validated at a fast 10-second cadence.
 
 > **Why test mode exists:** the owner wanted to validate the automation logic (demand math, minimum-airflow allocation, proportional relay control) before trusting it in production, using a dashboard as a test bench.
 
@@ -73,14 +73,14 @@ This is deliberate: `!include_dir_named packages` would recursively glob **every
 | Zone | Register count (input_number) | Relays |
 |------|-------------------------------|--------|
 | Z1 Stairs | 1 | relay 1 |
-| Z2 Bed 1 | 3 | relays 2, 3, 4 |
-| Z3 Bed 2 | 2 | relays 5, 6 |
-| Z4 Bed 3 | 1 | relay 7 |
-| Z5 Master Bed | 3 | relays 8, 9, 10 |
-| Z6 Master Bath | 3 | relays 11, 12, 13 |
-| **Total** | **13** | 13 relays |
+| Z2 Bed 1 | 2 | relays 2, 3 |
+| Z3 Bed 2 | 2 | relays 4, 5 |
+| Z4 Bed 3 | 1 | relay 6 |
+| Z5 Master Bed | 2 | relays 7, 8 |
+| Z6 Master Bath | 2 | relays 9, 10 |
+| **Total** | **10** | 10 relays |
 
-The 16-relay board has relays 14–16 unused upstream.
+Upstairs uses relays 1 through 10; relays 11 through 16 are unused and left non-energized (not shown on the dashboard).
 
 ### Downstairs (board: `switch.iotmug_2_relay_board_relay_N` — placeholder prefix, verify)
 
@@ -138,17 +138,17 @@ total = Σ raw_registers over zones
 
 ### 5. Minimum Airflow Allocation (automation variables)
 
-The `hvac_min_airflow` input (register equivalents, default 1) protects the blower/furnace. When `total_demand < min_airflow`, the **deficit** is allocated across zones in **fixed priority order** (stairs first — smallest zones first), up to each zone's physical capacity:
+The `hvac_min_airflow` input (register equivalents, default 1) protects the blower/furnace; upstairs airflow is capped at its 10-register maximum. When `total_demand < min_airflow`, the **deficit** is allocated **one register at a time, round-robin** across zones in a fixed rotation (Master Bath → Bed 1 → Stairs → Bed 2 → Master Bed → Bed 3), repeating passes until the deficit is satisfied. Zones already at their physical capacity are skipped:
 
 ```
 deficit       = max(min_airflow − total_demand, 0)
-z1_extra      = min(deficit, max(cap_1 − r1, 0))
-z2_extra      = min(deficit − z1_extra, max(cap_2 − r2, 0))
-... (chained)
-rN_eff        = rN + zN_extra   # effective register count used by relays
+alloc         = allocate_round_robin(deficit, order=Z6→Z2→Z1→Z3→Z5→Z4, caps)
+rN_eff        = rN + alloc[N]   # effective register count used by relays
 ```
 
-Capacities: upstairs Z1=1, Z2=3, Z3=2, Z4=1, Z5=3, Z6=3. Downstairs Z1=2, Z2=2, Z3=3, Z4=2, Z5=1.
+Allocation order (repeat passes as needed): **Master Bath (Z6) → Bed 1 (Z2) → Stairs (Z1) → Bed 2 (Z3) → Master Bed (Z5) → Bed 3 (Z4)**. Each zone receives at most one register per pass, and only until its capacity (upstairs Z1=1, Z2=2, Z3=2, Z4=1, Z5=2, Z6=2). Downstairs Z1=2, Z2=2, Z3=3, Z4=2, Z5=1.
+
+> **Implementation note:** the round-robin variables use only core Jinja2 features (`namespace` scalar mutation). Do **not** use the `combine` filter here — it is not available in Home Assistant's Jinja2 and will cause the entire automation to fail to load (which previously froze the loop, the dashboard button, and the relays).
 
 ### 6. Proportional Relay Control (automation)
 
@@ -181,11 +181,12 @@ condition:
 ### Action Flow
 
 1. **Compute variables** (action, raw registers rN, total_demand, min_airflow, deficit, extras, effective rN_eff).
-2. **If action in [heating, cooling]:**
+2. **If zoning disabled (`hvac_*_zoning_enabled` off):** de-energize **all** active relays (open all dampers) — both in the control loop and via a dedicated state-triggered automation, so turning zoning off always opens the dampers immediately.
+3. **If action in [heating, cooling]:**
    - Log active loop summary.
    - If deficit > 0, log min-airflow warning.
    - Per relay (all zones): open/close based on `rN_eff ≥ i`.
-3. **Else (idle/off):** failsafe — open ALL dampers (turn_off all relays) + warning log.
+4. **Else (idle/off):** failsafe — open ALL dampers (turn_off all relays) + warning log.
 
 ---
 
@@ -229,6 +230,8 @@ The error sensors are test-mode aware: they substitute test inputs when `input_b
 | `input_number.hvac_test_target_temp` | Test setpoint (°F) |
 | `input_number.hvac_test_zone_N_temp` | Per-zone current temp slider (°F) — 0.1°F steps |
 
+When test mode is enabled, an automation copies each zone's assigned temperature sensor value into its corresponding test slider. Only numeric readings from 50–90°F are copied; unavailable or out-of-range readings are logged and leave that slider unchanged. The same initialization behavior applies to downstairs test mode.
+
 The legacy `input_number.hvac_test_zone_N_registers` (0–13 sliders) still exist but are **no longer read** by the automation; they were replaced by the temperature-driven test bench. Leave them unused.
 
 ### Zone wiring (input_text)
@@ -256,7 +259,7 @@ The dashboard (`dashboards/hvac_zoning_dashboard.yaml`, path `hvac-zoning`) has 
 | Test bench inputs | Test only (`state: 'on'`) | Action, target, 5–6 zone temp sliders, "Run Zone Loop Now" button |
 | Tuning | Always | Min airflow, sensitivity, deadband, weights, loop interval |
 | Relay glance | Always | Per-relay damper state (ON=closed, OFF=open) |
-| Gauge | Always | Total demand vs max (13 upstairs / 10 downstairs) |
+| Gauge | Always | Total demand vs max (10 upstairs / 10 downstairs) |
 | Last run + logbook | Always | Automation entity, `last-triggered`, recent log |
 
 **"Run Zone Loop Now" button** uses `automation.trigger` with `skip_condition: true` — required, otherwise the modulo condition silently aborts manual runs.
@@ -269,14 +272,14 @@ The dashboard (`dashboards/hvac_zoning_dashboard.yaml`, path `hvac-zoning`) has 
 
 1. **Load packages:** the HVAC package files load on restart via the explicit `!include` entries in `configuration.yaml` under `homeassistant.packages`. Restart or "Reload all YAML" after editing entity definitions.
 2. **Dashboard:** the YAML-mode dashboard `dashboards/hvac_zoning_dashboard.yaml` is registered under `lovelace: dashboards: hvac-zoning:` in `configuration.yaml` and loads from disk on restart. Edits to the `.yaml` need a restart (or Dev Tools → YAML → reload Lovelace).
-3. **Assign temp sensors:** in production mode, use the "Zone Temperature Sensors" card (or Developer Tools → States) to point each `input_text.*_temp_entity` at the real sensor entity ID. Defaults: stairs/masterbed → thermostat current-temp sensor; others → `sensor.placeholder_*`.
+3. **Assign temp sensors:** in production mode, use the "Zone Temperature Sensors" card (or Developer Tools → States) to point each `input_text.*_temp_entity` at the real sensor entity ID. Upstairs defaults are `sensor.trisensor_8_air_temperature`, `sensor.bed_1_climate_temperature`, `sensor.bed_2_climate_temperature`, `sensor.bed_3_climate_temperature`, `sensor.upstairs_nativezone_temperature`, and `sensor.master_bath_climate_temperature` for Zones 1–6, respectively.
 4. **Verify zones:** confirm the thermostat climate entity matches the floor (`climate.upstairs_nativezone` / `climate.downstairs_nativezone`), and relay entity prefixes (`switch.iotmug_16_relay_board_relay_N` / `switch.iotmug_2_relay_board_relay_N`).
 
 ---
 
 ## Testing Workflow (Test Mode)
 
-1. Toggle **Test Mode** ON on the dashboard.
+1. Toggle **Test Mode** ON on the dashboard. Each zone's test temperature slider is initialized from its assigned sensor; adjust sliders as needed.
 2. Set **Test Action** (heating/cooling).
 3. Set **Test Target** and per-zone **temp sliders** (0.1°F steps).
 4. Loop runs every 10 s; watch zone math cards update, then relay glance reflect dampers.
@@ -298,7 +301,7 @@ The dashboard (`dashboards/hvac_zoning_dashboard.yaml`, path `hvac-zoning`) has 
 
 ## Troubleshooting & Gotchas
 
-- **Min-airflow didn't open enough dampers:** allocation only opens zones in priority order stairs→…→up to capacity. If deficit is consumed by early zones, later zones stay closed. Check the `Minimum Airflow Enforced` warning log for the effective demands.
+- **Min-airflow didn't open enough dampers:** allocation opens one register per zone in a round-robin rotation (Master Bath → Bed 1 → Stairs → Bed 2 → Master Bed → Bed 3), repeating passes until the deficit is met. Zones that are already full are skipped. Check the `Minimum Airflow Enforced` warning log for the effective demands.
 - **Unoccupied zones cap at 1 register:** caused by `min(raw, 1.0)` before the 0.2 unoccupied weight. Fix: raise `hvac_zone_weight_unoccupied` to 1.0 (both floors now default 1.0).
 - **`input_number` "expected a mapping/float" errors:** means an entity body got indented under another entity (nested instead of top-level). Check indentation in `hvac_*_test.yaml`.
 - **Dashboard "expected str at entity_ids[N]" history error:** a card got nested inside the history-graph's `entities:` list (indentation bug). Keep conditional cards at the top level of `cards:`.

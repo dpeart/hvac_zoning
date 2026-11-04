@@ -1,4 +1,4 @@
-title: "HVAC Zoning"
+﻿title: "HVAC Zoning"
 views:
   # ================= UPSTAIRS =================
   - title: Upstairs
@@ -193,23 +193,20 @@ views:
           - { entity: switch.iotmug_16_relay_board_relay_1,  name: Stairs }
           - { entity: switch.iotmug_16_relay_board_relay_2,  name: Bed1-a }
           - { entity: switch.iotmug_16_relay_board_relay_3,  name: Bed1-b }
-          - { entity: switch.iotmug_16_relay_board_relay_4,  name: Bed1-c }
-          - { entity: switch.iotmug_16_relay_board_relay_5,  name: Bed2-a }
-          - { entity: switch.iotmug_16_relay_board_relay_6,  name: Bed2-b }
-          - { entity: switch.iotmug_16_relay_board_relay_7,  name: Bed3 }
-          - { entity: switch.iotmug_16_relay_board_relay_8,  name: MstrBed-a }
-          - { entity: switch.iotmug_16_relay_board_relay_9,  name: MstrBed-b }
-          - { entity: switch.iotmug_16_relay_board_relay_10, name: MstrBed-c }
-          - { entity: switch.iotmug_16_relay_board_relay_11, name: MstrBath-a }
-          - { entity: switch.iotmug_16_relay_board_relay_12, name: MstrBath-b }
-          - { entity: switch.iotmug_16_relay_board_relay_13, name: MstrBath-c }
+          - { entity: switch.iotmug_16_relay_board_relay_4,  name: Bed2-a }
+          - { entity: switch.iotmug_16_relay_board_relay_5,  name: Bed2-b }
+          - { entity: switch.iotmug_16_relay_board_relay_6,  name: Bed3 }
+          - { entity: switch.iotmug_16_relay_board_relay_7,  name: MstrBed-a }
+          - { entity: switch.iotmug_16_relay_board_relay_8,  name: MstrBed-b }
+          - { entity: switch.iotmug_16_relay_board_relay_9,  name: MstrBath-a }
+          - { entity: switch.iotmug_16_relay_board_relay_10, name: MstrBath-b }
 
       - type: gauge
         entity: sensor.upstairs_total_demand
         name: Total Demand
         min: 0
-        max: 13
-        severity: { green: 0, yellow: 5, red: 10 }
+        max: 10
+        severity: { green: 0, yellow: 5, red: 8 }
 
       - type: entities
         title: Last Automation Run

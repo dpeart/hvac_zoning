@@ -1,7 +1,8 @@
 ﻿# HVAC UPSTAIRS: TEST/DEBUG MODE CONTROLS
 # ==========================================
 # When test mode is ON, the automation uses the
-# slider values below instead of the real sensor data.
+# temperature slider values instead of the real sensor data.
+# Legacy register sliders are retained but no longer used.
 
 input_boolean:
   hvac_test_mode:

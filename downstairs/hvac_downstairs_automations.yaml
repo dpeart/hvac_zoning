@@ -1,4 +1,80 @@
 ﻿automation:
+  - id: downstairs_initialize_test_zone_temps
+    alias: "HVAC Downstairs: Initialize Test Zone Temperatures"
+    description: "Copies assigned zone sensor values into test temperature sliders when downstairs test mode is enabled."
+    trigger:
+      - platform: state
+        entity_id: input_boolean.hvac_downstairs_test_mode
+        to: "on"
+    mode: restart
+    action:
+      - repeat:
+          for_each:
+            - zone: Zone 1
+              sensor_helper: input_text.hvac_downstairs_zone_1_temp_entity
+              test_helper: input_number.hvac_downstairs_test_zone_1_temp
+            - zone: Zone 2
+              sensor_helper: input_text.hvac_downstairs_zone_2_temp_entity
+              test_helper: input_number.hvac_downstairs_test_zone_2_temp
+            - zone: Zone 3
+              sensor_helper: input_text.hvac_downstairs_zone_3_temp_entity
+              test_helper: input_number.hvac_downstairs_test_zone_3_temp
+            - zone: Zone 4
+              sensor_helper: input_text.hvac_downstairs_zone_4_temp_entity
+              test_helper: input_number.hvac_downstairs_test_zone_4_temp
+            - zone: Zone 5
+              sensor_helper: input_text.hvac_downstairs_zone_5_temp_entity
+              test_helper: input_number.hvac_downstairs_test_zone_5_temp
+          sequence:
+            - variables:
+                sensor_entity: "{{ states(repeat.item.sensor_helper) }}"
+                sensor_value: "{{ states(sensor_entity) }}"
+            - choose:
+                - conditions:
+                    - condition: template
+                      value_template: "{{ is_number(sensor_value) and 50 <= (sensor_value | float) <= 90 }}"
+                  sequence:
+                    - service: input_number.set_value
+                      target:
+                        entity_id: "{{ repeat.item.test_helper }}"
+                      data:
+                        value: "{{ sensor_value | float | round(1) }}"
+              default:
+                - service: system_log.write
+                  data:
+                    level: warning
+                    message: >
+                      HVAC Downstairs test mode: {{ repeat.item.zone }} sensor
+                      {{ sensor_entity }} has invalid or out-of-range value
+                      {{ sensor_value }}; test temperature was not initialized.
+
+  - id: downstairs_deenergize_relays_on_disable
+    alias: "HVAC Downstairs: De-energize Relays When Zoning Disabled"
+    description: "Ensures all downstairs damper relays are de-energized whenever the downstairs zoning system is disabled."
+    trigger:
+      - platform: state
+        entity_id: input_boolean.hvac_downstairs_zoning_enabled
+        to: "off"
+    mode: single
+    action:
+      - service: homeassistant.turn_off
+        target:
+          entity_id:
+            - switch.iotmug_2_relay_board_relay_1
+            - switch.iotmug_2_relay_board_relay_2
+            - switch.iotmug_2_relay_board_relay_3
+            - switch.iotmug_2_relay_board_relay_4
+            - switch.iotmug_2_relay_board_relay_5
+            - switch.iotmug_2_relay_board_relay_6
+            - switch.iotmug_2_relay_board_relay_7
+            - switch.iotmug_2_relay_board_relay_8
+            - switch.iotmug_2_relay_board_relay_9
+            - switch.iotmug_2_relay_board_relay_10
+      - service: system_log.write
+        data:
+          level: warning
+          message: "HVAC Downstairs zoning disabled: all relays de-energized."
+
   - id: downstairs_hvac_control_loop
     alias: "HVAC Downstairs: Zone Control Loop"
     description: "Evaluates zone demands, applies minimum airflow constraints, and drives ESPHome damper relays. Runs every 10s in test mode, otherwise on the configured loop interval."
@@ -42,6 +118,28 @@
       r5_eff: "{{ r5 + z5_extra }}"
     action:
       - choose:
+          # --- ZONING DISABLED: DE-ENERGIZE ALL RELAYS ---
+          - conditions:
+              - condition: template
+                value_template: "{{ not is_state('input_boolean.hvac_downstairs_zoning_enabled', 'on') }}"
+            sequence:
+              - service: homeassistant.turn_off
+                target:
+                  entity_id:
+                    - switch.iotmug_2_relay_board_relay_1
+                    - switch.iotmug_2_relay_board_relay_2
+                    - switch.iotmug_2_relay_board_relay_3
+                    - switch.iotmug_2_relay_board_relay_4
+                    - switch.iotmug_2_relay_board_relay_5
+                    - switch.iotmug_2_relay_board_relay_6
+                    - switch.iotmug_2_relay_board_relay_7
+                    - switch.iotmug_2_relay_board_relay_8
+                    - switch.iotmug_2_relay_board_relay_9
+                    - switch.iotmug_2_relay_board_relay_10
+              - service: system_log.write
+                data:
+                  level: warning
+                  message: "HVAC Downstairs zoning disabled: all relays de-energized."
           # --- ACTIVE CONDITIONING (Heating or Cooling) ---
           - conditions:
               - condition: template
@@ -193,4 +291,4 @@
             data:
               level: warning
               message: >
-                HVAC Downstairs Failsafe Active: hvac_action='{{ hvac_action }}'. All dampers opened.
+                HVAC Downstairs Failsafe Active: hvac_action='{{ hvac_action }}'. All dampers opened (de-energized).

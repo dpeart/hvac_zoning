@@ -15,9 +15,9 @@ input_number:
   upstairs_hvac_zone_2_registers:
     name: "Upstairs Zone 2 (Bed 1) Registers"
     min: 1
-    max: 5
+    max: 2
     step: 1
-    initial: 3
+    initial: 2
     icon: mdi:air-filter
 
   upstairs_hvac_zone_3_registers:
@@ -39,17 +39,17 @@ input_number:
   upstairs_hvac_zone_5_registers:
     name: "Upstairs Zone 5 (Master Bed) Registers"
     min: 1
-    max: 5
+    max: 2
     step: 1
-    initial: 3
+    initial: 2
     icon: mdi:air-filter
 
   upstairs_hvac_zone_6_registers:
     name: "Upstairs Zone 6 (Master Bath) Registers"
     min: 1
-    max: 5
+    max: 2
     step: 1
-    initial: 3
+    initial: 2
     icon: mdi:air-filter
 
   # --- Workbench Test Slider ---
@@ -94,7 +94,7 @@ input_text:
   # Zone 1: Stairs (Thermostat / Return Reference)
   upstairs_hvac_zone_1_temp_entity:
     name: "Upstairs Zone 1 Temp Entity ID"
-    initial: "sensor.upstairs_nativezone_current_temperature"
+    initial: "sensor.trisensor_8_air_temperature"
     icon: mdi:thermometer
   upstairs_hvac_zone_1_occ_entity:
     name: "Upstairs Zone 1 Occupancy Entity ID"
@@ -104,7 +104,7 @@ input_text:
   # Zone 2: Bed 1 (Tri-Sensor)
   upstairs_hvac_zone_2_temp_entity:
     name: "Upstairs Zone 2 Temp Entity ID"
-    initial: "sensor.trisensor_8_air_temperature"
+    initial: "sensor.bed_1_climate_temperature"
     icon: mdi:thermometer
   upstairs_hvac_zone_2_occ_entity:
     name: "Upstairs Zone 2 Occupancy Entity ID"
@@ -114,7 +114,7 @@ input_text:
   # Zone 3: Bed 2 (Third Reality)
   upstairs_hvac_zone_3_temp_entity:
     name: "Upstairs Zone 3 Temp Entity ID"
-    initial: "sensor.third_reality_inc_3rths0224z_temperature"
+    initial: "sensor.bed_2_climate_temperature"
     icon: mdi:thermometer
   upstairs_hvac_zone_3_occ_entity:
     name: "Upstairs Zone 3 Occupancy Entity ID"
@@ -124,7 +124,7 @@ input_text:
   # Zone 4: Bed 3
   upstairs_hvac_zone_4_temp_entity:
     name: "Upstairs Zone 4 Temp Entity ID"
-    initial: "sensor.placeholder_bed3_temp"
+    initial: "sensor.bed_3_climate_temperature"
     icon: mdi:thermometer
   upstairs_hvac_zone_4_occ_entity:
     name: "Upstairs Zone 4 Occupancy Entity ID"
@@ -144,7 +144,7 @@ input_text:
   # Zone 6: Master Bath
   upstairs_hvac_zone_6_temp_entity:
     name: "Upstairs Zone 6 Temp Entity ID"
-    initial: "sensor.master_bath_thirdreality_temperature"
+    initial: "sensor.master_bath_climate_temperature"
     icon: mdi:thermometer
   upstairs_hvac_zone_6_occ_entity:
     name: "Upstairs Zone 6 Occupancy Entity ID"

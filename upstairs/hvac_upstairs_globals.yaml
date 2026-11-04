@@ -51,7 +51,7 @@ input_number:
   hvac_min_airflow:
     name: HVAC Minimum Airflow (Registers)
     min: 1
-    max: 13
+    max: 10
     step: 1
     initial: 1
     unit_of_measurement: "registers"

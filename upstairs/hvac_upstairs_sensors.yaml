@@ -114,7 +114,7 @@ template:
         icon: mdi:air-filter
         state: >
           {% set demand = states('sensor.upstairs_zone_2_demand') | float(0) %}
-          {% set n_reg = states('input_number.upstairs_hvac_zone_2_registers') | float(3) %}
+          {% set n_reg = [states('input_number.upstairs_hvac_zone_2_registers') | float(2), 2] | min %}
           {{ (demand * n_reg) | round(0, 'ceil') | int }}
 
 
@@ -285,7 +285,7 @@ template:
         icon: mdi:air-filter
         state: >
           {% set demand = states('sensor.upstairs_zone_5_demand') | float(0) %}
-          {% set n_reg = states('input_number.upstairs_hvac_zone_5_registers') | float(3) %}
+          {% set n_reg = [states('input_number.upstairs_hvac_zone_5_registers') | float(2), 2] | min %}
           {{ (demand * n_reg) | round(0, 'ceil') | int }}
 
 
@@ -342,7 +342,7 @@ template:
         icon: mdi:air-filter
         state: >
           {% set demand = states('sensor.upstairs_zone_6_demand') | float(0) %}
-          {% set n_reg = states('input_number.upstairs_hvac_zone_6_registers') | float(3) %}
+          {% set n_reg = [states('input_number.upstairs_hvac_zone_6_registers') | float(2), 2] | min %}
           {{ (demand * n_reg) | round(0, 'ceil') | int }}
       # --- TOTAL DEMAND (Sum of all zones - respects test mode) ---
       - name: "Upstairs Total Demand"
