@@ -48,16 +48,17 @@ This is deliberate: `!include_dir_named packages` would recursively glob **every
 
 **Dashboard:** the single YAML-mode dashboard `hvac_zoning_dashboard.yaml` is registered in `configuration.yaml` and loaded from disk on every restart (no pasting, no drift). The two per-floor files are kept as per-floor sources for reference.
 
-> **YAML-mode dashboard registration:** under `lovelace: dashboards:`, the **dictionary key is the URL path** and Home Assistant requires it to contain a hyphen (`-`). Use `hvac-zoning` (not `hvac_zoning`), e.g.:
+> **YAML-mode dashboard registration:** under `lovelace: dashboards:`, the **dictionary key is the URL path** and Home Assistant requires it to contain a hyphen (`-`). Use `hvac-zoning` (not `hvac_zoning`). **Important:** do **not** set a top-level `lovelace: mode: yaml` — that switches the default Overview dashboard to YAML mode and hides it unless a `ui-lovelace.yaml` exists. Only declare the extra dashboard:
 > ```yaml
 > lovelace:
->   mode: yaml
 >   dashboards:
 >     hvac-zoning:
 >       mode: yaml
 >       title: HVAC Zoning
+>       icon: mdi:air-filter
 >       filename: packages/hvac_zoning/dashboards/hvac_zoning_dashboard.yaml
 > ```
+> This registers only the extra YAML dashboard; the default Overview stays in storage mode.
 
 **Entity naming conventions:**
 - Upstairs: `input_number.hvac_test_zone_1_temp`, `sensor.upstairs_zone_1_error`, `input_boolean.hvac_test_mode`, etc.
@@ -271,7 +272,7 @@ The dashboard (`dashboards/hvac_zoning_dashboard.yaml`, path `hvac-zoning`) has 
 ## Deployment / Onboarding Steps
 
 1. **Load packages:** the HVAC package files load on restart via the explicit `!include` entries in `configuration.yaml` under `homeassistant.packages`. Restart or "Reload all YAML" after editing entity definitions.
-2. **Dashboard:** the YAML-mode dashboard `dashboards/hvac_zoning_dashboard.yaml` is registered under `lovelace: dashboards: hvac-zoning:` in `configuration.yaml` and loads from disk on restart. Edits to the `.yaml` need a restart (or Dev Tools → YAML → reload Lovelace).
+2. **Dashboard:** the YAML-mode dashboard `dashboards/hvac_zoning_dashboard.yaml` is registered under `lovelace: dashboards: hvac-zoning:` in `configuration.yaml` (no top-level `lovelace: mode`, so the default Overview stays intact) and loads from disk on restart. Edits to the `.yaml` need a restart (or Dev Tools → YAML → reload Lovelace).
 3. **Assign temp sensors:** in production mode, use the "Zone Temperature Sensors" card (or Developer Tools → States) to point each `input_text.*_temp_entity` at the real sensor entity ID. Upstairs defaults are `sensor.trisensor_8_air_temperature`, `sensor.bed_1_climate_temperature`, `sensor.bed_2_climate_temperature`, `sensor.bed_3_climate_temperature`, `sensor.upstairs_nativezone_temperature`, and `sensor.master_bath_climate_temperature` for Zones 1–6, respectively.
 4. **Verify zones:** confirm the thermostat climate entity matches the floor (`climate.upstairs_nativezone` / `climate.downstairs_nativezone`), and relay entity prefixes (`switch.iotmug_16_relay_board_relay_N` / `switch.iotmug_2_relay_board_relay_N`).
 
