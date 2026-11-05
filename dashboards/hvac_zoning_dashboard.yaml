@@ -2,7 +2,7 @@
 views:
   # ================= UPSTAIRS =================
   - title: Upstairs
-    icon: mdi:stairs
+    icon: mdi:stairs-up
     cards:
       # ---------- ALWAYS ON ----------
       - type: horizontal-stack
@@ -224,7 +224,7 @@ views:
 
   # ================= DOWNSTAIRS =================
   - title: Downstairs
-    icon: mdi:floor-plan
+    icon: mdi:stairs-down
     cards:
       # ---------- ALWAYS ON ----------
       - type: horizontal-stack
