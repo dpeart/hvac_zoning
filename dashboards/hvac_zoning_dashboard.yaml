@@ -24,7 +24,7 @@ views:
         square: false
         cards:
           - type: entities
-            title: "Z1 · Stairs"
+            title: "Stairs"
             show_header_toggle: false
             entities:
               - sensor.upstairs_zone_1_temp
@@ -32,7 +32,7 @@ views:
               - sensor.upstairs_zone_1_demand
               - sensor.upstairs_zone_1_raw_registers
           - type: entities
-            title: "Z2 · Bed 1"
+            title: "Bed 1"
             show_header_toggle: false
             entities:
               - sensor.upstairs_zone_2_temp
@@ -40,7 +40,7 @@ views:
               - sensor.upstairs_zone_2_demand
               - sensor.upstairs_zone_2_raw_registers
           - type: entities
-            title: "Z3 · Bed 2"
+            title: "Bed 2"
             show_header_toggle: false
             entities:
               - sensor.upstairs_zone_3_temp
@@ -48,7 +48,7 @@ views:
               - sensor.upstairs_zone_3_demand
               - sensor.upstairs_zone_3_raw_registers
           - type: entities
-            title: "Z4 · Bed 3"
+            title: "Bed 3"
             show_header_toggle: false
             entities:
               - sensor.upstairs_zone_4_temp
@@ -56,7 +56,7 @@ views:
               - sensor.upstairs_zone_4_demand
               - sensor.upstairs_zone_4_raw_registers
           - type: entities
-            title: "Z5 · Master Bed"
+            title: "Master Bed"
             show_header_toggle: false
             entities:
               - sensor.upstairs_zone_5_temp
@@ -64,7 +64,7 @@ views:
               - sensor.upstairs_zone_5_demand
               - sensor.upstairs_zone_5_raw_registers
           - type: entities
-            title: "Z6 · Master Bath"
+            title: "Master Bath"
             show_header_toggle: false
             entities:
               - sensor.upstairs_zone_6_temp
