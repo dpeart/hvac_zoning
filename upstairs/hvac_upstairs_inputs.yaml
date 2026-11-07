@@ -94,7 +94,7 @@ input_text:
   # Zone 1: Stairs (Thermostat / Return Reference)
   upstairs_hvac_zone_1_temp_entity:
     name: "Upstairs Zone 1 Temp Entity ID"
-    initial: "sensor.trisensor_8_air_temperature"
+    initial: "sensor.upstairs_climate_temperature"
     icon: mdi:thermometer
   upstairs_hvac_zone_1_occ_entity:
     name: "Upstairs Zone 1 Occupancy Entity ID"

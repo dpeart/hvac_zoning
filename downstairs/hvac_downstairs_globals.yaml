@@ -56,7 +56,7 @@ input_number:
     min: 1
     max: 13
     step: 1
-    initial: 1
+    initial: 4
     unit_of_measurement: "registers"
     icon: mdi:air-filter
 

@@ -28,7 +28,7 @@ input_text:
   # --- Zone Temperature & Occupancy Entity IDs ---
   hvac_downstairs_zone_1_temp_entity:
     name: "Downstairs Zone 1 Temp Entity ID"
-    initial: "sensor.placeholder_kitchen_temp"
+    initial: "sensor.kitchen_climate_temperature"
     icon: mdi:thermometer
   hvac_downstairs_zone_1_occ_entity:
     name: "Downstairs Zone 1 Occupancy Entity ID"
@@ -37,7 +37,7 @@ input_text:
 
   hvac_downstairs_zone_2_temp_entity:
     name: "Downstairs Zone 2 Temp Entity ID"
-    initial: "sensor.placeholder_dining_temp"
+    initial: "sensor.dining_climate_temperature"
     icon: mdi:thermometer
   hvac_downstairs_zone_2_occ_entity:
     name: "Downstairs Zone 2 Occupancy Entity ID"
@@ -46,7 +46,7 @@ input_text:
 
   hvac_downstairs_zone_3_temp_entity:
     name: "Downstairs Zone 3 Temp Entity ID"
-    initial: "sensor.placeholder_living_temp"
+    initial: "sensor.living_climate_temperature"
     icon: mdi:thermometer
   hvac_downstairs_zone_3_occ_entity:
     name: "Downstairs Zone 3 Occupancy Entity ID"
@@ -55,7 +55,7 @@ input_text:
 
   hvac_downstairs_zone_4_temp_entity:
     name: "Downstairs Zone 4 Temp Entity ID"
-    initial: "sensor.placeholder_office_temp"
+    initial: "sensor.office_climate_temperature"
     icon: mdi:thermometer
   hvac_downstairs_zone_4_occ_entity:
     name: "Downstairs Zone 4 Occupancy Entity ID"
@@ -64,7 +64,7 @@ input_text:
 
   hvac_downstairs_zone_5_temp_entity:
     name: "Downstairs Zone 5 Temp Entity ID"
-    initial: "sensor.downstairs_nativezone_current_temperature"
+    initial: "sensor.downstairs_nativezone_temperature"
     icon: mdi:thermometer
   hvac_downstairs_zone_5_occ_entity:
     name: "Downstairs Zone 5 Occupancy Entity ID"
