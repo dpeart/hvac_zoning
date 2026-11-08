@@ -109,23 +109,26 @@
       min_airflow: "{{ [states('input_number.hvac_min_airflow') | int(1), 10] | min }}"
       # If total demand is below the minimum airflow, allocate the deficit
       # one register at a time in round-robin rotation across zones
-      # (Master Bath -> Bed 1 -> Stairs -> Bed 2 -> Master Bed -> Bed 3),
+      # (Master Bed -> Master Bath -> Bed 1 -> Stairs -> Bed 2 -> Bed 3),
       # repeating passes in the same order until the deficit is satisfied.
       # Zones already at their physical relay capacity (Z1=1, Z2=2, Z3=2,
-      # Z4=1, Z5=2, Z6=2) are skipped. Two passes cover every zone's maximum
-      # spare of 2. NOTE: only Jinja2-core features are used here (namespace
-      # scalar mutation); the `combine` filter is NOT available in HA and
-      # previously caused the whole automation to fail to load.
+      # Z4=1, Z5=2, Z6=2) are skipped. Master Bed is the thermostat zone,
+      # so it gets the first min-airflow register whenever the system is
+      # actively conditioning, even if its own demand is inside the deadband.
+      # Two passes cover every zone's maximum spare of 2. NOTE: only Jinja2-core
+      # features are used here (namespace scalar mutation); the `combine` filter
+      # is NOT available in HA and previously caused the whole automation to
+      # fail to load.
       deficit: "{{ [min_airflow - total_demand, 0] | max }}"
       ns_alloc: >
         {% set ns = namespace(left = deficit | int(0),
                               e1 = 0, e2 = 0, e3 = 0, e4 = 0, e5 = 0, e6 = 0) %}
         {% for _pass in [1, 2] %}
+          {% if ns.left > 0 and ns.e5 < [2 - r5 | int(0), 0] | max %}{% set ns.e5 = ns.e5 + 1 %}{% set ns.left = ns.left - 1 %}{% endif %}
           {% if ns.left > 0 and ns.e6 < [2 - r6 | int(0), 0] | max %}{% set ns.e6 = ns.e6 + 1 %}{% set ns.left = ns.left - 1 %}{% endif %}
           {% if ns.left > 0 and ns.e2 < [2 - r2 | int(0), 0] | max %}{% set ns.e2 = ns.e2 + 1 %}{% set ns.left = ns.left - 1 %}{% endif %}
           {% if ns.left > 0 and ns.e1 < [1 - r1 | int(0), 0] | max %}{% set ns.e1 = ns.e1 + 1 %}{% set ns.left = ns.left - 1 %}{% endif %}
           {% if ns.left > 0 and ns.e3 < [2 - r3 | int(0), 0] | max %}{% set ns.e3 = ns.e3 + 1 %}{% set ns.left = ns.left - 1 %}{% endif %}
-          {% if ns.left > 0 and ns.e5 < [2 - r5 | int(0), 0] | max %}{% set ns.e5 = ns.e5 + 1 %}{% set ns.left = ns.left - 1 %}{% endif %}
           {% if ns.left > 0 and ns.e4 < [1 - r4 | int(0), 0] | max %}{% set ns.e4 = ns.e4 + 1 %}{% set ns.left = ns.left - 1 %}{% endif %}
         {% endfor %}
         {{ ns.e1 }}|{{ ns.e2 }}|{{ ns.e3 }}|{{ ns.e4 }}|{{ ns.e5 }}|{{ ns.e6 }}
