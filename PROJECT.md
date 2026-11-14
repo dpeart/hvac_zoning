@@ -139,19 +139,23 @@ total = Σ raw_registers over zones
 
 ### 5. Minimum Airflow Allocation (automation variables)
 
-The `hvac_min_airflow` input (register equivalents, default 1) protects the blower/furnace; upstairs airflow is capped at its 10-register maximum. When `total_demand < min_airflow`, the **deficit** is allocated **one register at a time, round-robin** across zones in a fixed rotation (Master Bed → Master Bath → Bed 1 → Stairs → Bed 2 → Bed 3), repeating passes until the deficit is satisfied. Zones already at their physical capacity are skipped:
+The `hvac_min_airflow` input (register equivalents, default 1) protects the blower/furnace; airflow is capped at each floor's 10-register maximum. When `total_demand < min_airflow`, the **deficit** is allocated **one register at a time, prioritizing the zones with the highest current signed error** (positive = needs airflow in the active mode). This directs the compulsory airflow to the zones that most need it instead of a fixed rotation. Zones already at physical capacity are skipped:
 
 ```
 deficit       = max(min_airflow − total_demand, 0)
-alloc         = allocate_round_robin(deficit, order=Z5→Z6→Z2→Z1→Z3→Z4, caps)
+alloc         = allocate_by_error(deficit, err1..errN, caps)
 rN_eff        = rN + alloc[N]   # effective register count used by relays
 ```
 
-Allocation order (repeat passes as needed): **Master Bed (Z5) → Master Bath (Z6) → Bed 1 (Z2) → Stairs (Z1) → Bed 2 (Z3) → Bed 3 (Z4)**. Each zone receives at most one register per pass, and only until its capacity (upstairs Z1=1, Z2=2, Z3=2, Z4=1, Z5=2, Z6=2). Master Bed is the thermostat zone, so it receives the first minimum-airflow register whenever the system is actively conditioning.
+**Error priority:** at each allocation step, the eligible zone (spare capacity, not yet given a register this pass) with the **largest positive error** receives a register, one at a time, repeating passes until the deficit is satisfied. Errors equal to or below 0 are served last.
 
-Downstairs uses the same round-robin allocator with order **Stairs (Z5) → Kitchen (Z1) → Dining (Z2) → Living (Z3) → Office (Z4)**, capacities Z1=2, Z2=2, Z3=3, Z4=2, Z5=1. Stairs is the thermostat zone, so it receives the first minimum-airflow register whenever the system is actively conditioning.
+**Fallback (no zone needs airflow):** when *all* errors are ≤ 0 (e.g., all zones over-met in heating: at/above setpoint) but the system is still calling, allocation serves the zone **closest to setpoint** (least over-met, i.e., highest/least-negative error) first — so the compulsory air heads toward the nearly-satisfied rooms rather than the most over-met ones. Ties resolve to the thermostat zone first, then physical order, so the blower always has a path to the stat while calling:
+- Upstairs: thermostat zone **Master Bed (Z5)**, capacities Z1=1, Z2=2, Z3=2, Z4=1, Z5=2, Z6=2.
+- Downstairs: thermostat zone **Stairs (Z5)**, capacities Z1=2, Z2=2, Z3=3, Z4=2, Z5=1.
 
-> **Implementation note:** the round-robin variables use only core Jinja2 features (`namespace` scalar mutation). Do **not** use the `combine` filter here — it is not available in Home Assistant's Jinja2 and will cause the entire automation to fail to load (which previously froze the loop, the dashboard button, and the relays).
+Ties in error value resolve to the thermostat zone first, then physical order. Pass count is the largest zone's spare capacity (upstairs 2 passes, downstairs 3 because Living has 3 registers).
+
+> **Implementation note:** the allocator variables use only core Jinja2 features (`namespace` scalar mutation, `max`). Do **not** use the `combine` filter here — it is not available in Home Assistant's Jinja2 and will cause the entire automation to fail to load (which previously froze the loop, the dashboard button, and the relays).
 
 ### 6. Proportional Relay Control (automation)
 
@@ -304,7 +308,7 @@ The dashboard (`dashboards/hvac_zoning_dashboard.yaml`, path `hvac-zoning`) has 
 
 ## Troubleshooting & Gotchas
 
-- **Min-airflow didn't open enough dampers:** allocation opens one register per zone in a round-robin rotation (Master Bed → Master Bath → Bed 1 → Stairs → Bed 2 → Bed 3), repeating passes until the deficit is met. Zones that are already full are skipped. Check the `Minimum Airflow Enforced` warning log for the effective demands.
+- **Min-airflow didn't open enough dampers:** allocation opens one register at a time, prioritizing the zones with the highest current error (falling back to thermostat-first when no zone needs airflow), repeating passes until the deficit is met. Zones that are already full are skipped. Check the `Minimum Airflow Enforced` warning log for the effective demands.
 - **Unoccupied zones cap at 1 register:** caused by `min(raw, 1.0)` before the 0.2 unoccupied weight. Fix: raise `hvac_zone_weight_unoccupied` to 1.0 (both floors now default 1.0).
 - **`input_number` "expected a mapping/float" errors:** means an entity body got indented under another entity (nested instead of top-level). Check indentation in `hvac_*_test.yaml`.
 - **Dashboard "expected str at entity_ids[N]" history error:** a card got nested inside the history-graph's `entities:` list (indentation bug). Keep conditional cards at the top level of `cards:`.
