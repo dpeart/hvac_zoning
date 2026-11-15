@@ -63,11 +63,18 @@
       - platform: state
         entity_id: input_boolean.hvac_zoning_enabled
         to: "off"
+      - platform: homeassistant
+        event: start
+      - platform: time_pattern
+        seconds: "/30"
+    condition:
+      - condition: state
+        entity_id: input_boolean.hvac_zoning_enabled
+        state: "off"
     mode: single
     action:
-      - service: homeassistant.turn_off
-        target:
-          entity_id:
+      - repeat:
+          for_each:
             - switch.iotmug_16_relay_board_relay_1
             - switch.iotmug_16_relay_board_relay_2
             - switch.iotmug_16_relay_board_relay_3
@@ -78,6 +85,15 @@
             - switch.iotmug_16_relay_board_relay_8
             - switch.iotmug_16_relay_board_relay_9
             - switch.iotmug_16_relay_board_relay_10
+          sequence:
+            - choose:
+                - conditions:
+                    - condition: template
+                      value_template: "{{ not is_state(repeat.item, 'off') }}"
+                  sequence:
+                    - service: homeassistant.turn_off
+                      target:
+                        entity_id: "{{ repeat.item }}"
       - service: input_text.set_value
         target:
           entity_id: input_text.hvac_upstairs_min_airflow_allocation

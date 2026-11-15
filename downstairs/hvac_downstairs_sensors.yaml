@@ -304,7 +304,7 @@ template:
         icon: mdi:air-filter
         unit_of_measurement: "registers"
         state: >
-          {% if states('switch.iotmug_16_relay_board_relay_1') not in ['on', 'off'] or states('switch.iotmug_16_relay_board_relay_2') not in ['on', 'off'] %}unknown{% else %}{{ (1 if states('switch.iotmug_16_relay_board_relay_1') == 'off' else 0) + (1 if states('switch.iotmug_16_relay_board_relay_2') == 'off' else 0) }}{% endif %}
+          {% if states('switch.basement_downstairs_iotmug_16_relay_relay_1') not in ['on', 'off'] or states('switch.basement_downstairs_iotmug_16_relay_relay_2') not in ['on', 'off'] %}unknown{% else %}{{ (1 if states('switch.basement_downstairs_iotmug_16_relay_relay_1') == 'off' else 0) + (1 if states('switch.basement_downstairs_iotmug_16_relay_relay_2') == 'off' else 0) }}{% endif %}
       - name: "Downstairs Zone 1 Min-Air Registers"
         unique_id: downstairs_zone_1_min_air_registers
         icon: mdi:air-filter
@@ -316,7 +316,7 @@ template:
         unique_id: downstairs_zone_1_register_1_source
         icon: mdi:source-branch
         state: >
-          {% set relay_state = states('switch.iotmug_16_relay_board_relay_1') %}
+          {% set relay_state = states('switch.basement_downstairs_iotmug_16_relay_relay_1') %}
           {% set demand = states('sensor.downstairs_zone_1_raw_registers') | int(0) %}
           {% set alloc = states('input_text.hvac_downstairs_min_airflow_allocation').split('|') %}
           {% set min_added = alloc[0] | int(0) %}
@@ -329,7 +329,7 @@ template:
         unique_id: downstairs_zone_1_register_2_source
         icon: mdi:source-branch
         state: >
-          {% set relay_state = states('switch.iotmug_16_relay_board_relay_2') %}
+          {% set relay_state = states('switch.basement_downstairs_iotmug_16_relay_relay_2') %}
           {% set demand = states('sensor.downstairs_zone_1_raw_registers') | int(0) %}
           {% set alloc = states('input_text.hvac_downstairs_min_airflow_allocation').split('|') %}
           {% set min_added = alloc[0] | int(0) %}
@@ -343,7 +343,7 @@ template:
         icon: mdi:air-filter
         unit_of_measurement: "registers"
         state: >
-          {% if states('switch.iotmug_16_relay_board_relay_3') not in ['on', 'off'] or states('switch.iotmug_16_relay_board_relay_4') not in ['on', 'off'] %}unknown{% else %}{{ (1 if states('switch.iotmug_16_relay_board_relay_3') == 'off' else 0) + (1 if states('switch.iotmug_16_relay_board_relay_4') == 'off' else 0) }}{% endif %}
+          {% if states('switch.basement_downstairs_iotmug_16_relay_relay_3') not in ['on', 'off'] or states('switch.basement_downstairs_iotmug_16_relay_relay_4') not in ['on', 'off'] %}unknown{% else %}{{ (1 if states('switch.basement_downstairs_iotmug_16_relay_relay_3') == 'off' else 0) + (1 if states('switch.basement_downstairs_iotmug_16_relay_relay_4') == 'off' else 0) }}{% endif %}
       - name: "Downstairs Zone 2 Min-Air Registers"
         unique_id: downstairs_zone_2_min_air_registers
         icon: mdi:air-filter
@@ -355,7 +355,7 @@ template:
         unique_id: downstairs_zone_2_register_1_source
         icon: mdi:source-branch
         state: >
-          {% set relay_state = states('switch.iotmug_16_relay_board_relay_3') %}
+          {% set relay_state = states('switch.basement_downstairs_iotmug_16_relay_relay_3') %}
           {% set demand = states('sensor.downstairs_zone_2_raw_registers') | int(0) %}
           {% set alloc = states('input_text.hvac_downstairs_min_airflow_allocation').split('|') %}
           {% set min_added = alloc[1] | int(0) %}
@@ -368,7 +368,7 @@ template:
         unique_id: downstairs_zone_2_register_2_source
         icon: mdi:source-branch
         state: >
-          {% set relay_state = states('switch.iotmug_16_relay_board_relay_4') %}
+          {% set relay_state = states('switch.basement_downstairs_iotmug_16_relay_relay_4') %}
           {% set demand = states('sensor.downstairs_zone_2_raw_registers') | int(0) %}
           {% set alloc = states('input_text.hvac_downstairs_min_airflow_allocation').split('|') %}
           {% set min_added = alloc[1] | int(0) %}
@@ -382,7 +382,7 @@ template:
         icon: mdi:air-filter
         unit_of_measurement: "registers"
         state: >
-          {% if states('switch.iotmug_16_relay_board_relay_5') not in ['on', 'off'] or states('switch.iotmug_16_relay_board_relay_6') not in ['on', 'off'] or states('switch.iotmug_16_relay_board_relay_7') not in ['on', 'off'] %}unknown{% else %}{{ (1 if states('switch.iotmug_16_relay_board_relay_5') == 'off' else 0) + (1 if states('switch.iotmug_16_relay_board_relay_6') == 'off' else 0) + (1 if states('switch.iotmug_16_relay_board_relay_7') == 'off' else 0) }}{% endif %}
+          {% if states('switch.basement_downstairs_iotmug_16_relay_relay_5') not in ['on', 'off'] or states('switch.basement_downstairs_iotmug_16_relay_relay_6') not in ['on', 'off'] or states('switch.basement_downstairs_iotmug_16_relay_relay_7') not in ['on', 'off'] %}unknown{% else %}{{ (1 if states('switch.basement_downstairs_iotmug_16_relay_relay_5') == 'off' else 0) + (1 if states('switch.basement_downstairs_iotmug_16_relay_relay_6') == 'off' else 0) + (1 if states('switch.basement_downstairs_iotmug_16_relay_relay_7') == 'off' else 0) }}{% endif %}
       - name: "Downstairs Zone 3 Min-Air Registers"
         unique_id: downstairs_zone_3_min_air_registers
         icon: mdi:air-filter
@@ -394,7 +394,7 @@ template:
         unique_id: downstairs_zone_3_register_1_source
         icon: mdi:source-branch
         state: >
-          {% set relay_state = states('switch.iotmug_16_relay_board_relay_5') %}
+          {% set relay_state = states('switch.basement_downstairs_iotmug_16_relay_relay_5') %}
           {% set demand = states('sensor.downstairs_zone_3_raw_registers') | int(0) %}
           {% set alloc = states('input_text.hvac_downstairs_min_airflow_allocation').split('|') %}
           {% set min_added = alloc[2] | int(0) %}
@@ -407,7 +407,7 @@ template:
         unique_id: downstairs_zone_3_register_2_source
         icon: mdi:source-branch
         state: >
-          {% set relay_state = states('switch.iotmug_16_relay_board_relay_6') %}
+          {% set relay_state = states('switch.basement_downstairs_iotmug_16_relay_relay_6') %}
           {% set demand = states('sensor.downstairs_zone_3_raw_registers') | int(0) %}
           {% set alloc = states('input_text.hvac_downstairs_min_airflow_allocation').split('|') %}
           {% set min_added = alloc[2] | int(0) %}
@@ -420,7 +420,7 @@ template:
         unique_id: downstairs_zone_3_register_3_source
         icon: mdi:source-branch
         state: >
-          {% set relay_state = states('switch.iotmug_16_relay_board_relay_7') %}
+          {% set relay_state = states('switch.basement_downstairs_iotmug_16_relay_relay_7') %}
           {% set demand = states('sensor.downstairs_zone_3_raw_registers') | int(0) %}
           {% set alloc = states('input_text.hvac_downstairs_min_airflow_allocation').split('|') %}
           {% set min_added = alloc[2] | int(0) %}
@@ -434,7 +434,7 @@ template:
         icon: mdi:air-filter
         unit_of_measurement: "registers"
         state: >
-          {% if states('switch.iotmug_16_relay_board_relay_8') not in ['on', 'off'] or states('switch.iotmug_16_relay_board_relay_9') not in ['on', 'off'] %}unknown{% else %}{{ (1 if states('switch.iotmug_16_relay_board_relay_8') == 'off' else 0) + (1 if states('switch.iotmug_16_relay_board_relay_9') == 'off' else 0) }}{% endif %}
+          {% if states('switch.basement_downstairs_iotmug_16_relay_relay_8') not in ['on', 'off'] or states('switch.basement_downstairs_iotmug_16_relay_relay_9') not in ['on', 'off'] %}unknown{% else %}{{ (1 if states('switch.basement_downstairs_iotmug_16_relay_relay_8') == 'off' else 0) + (1 if states('switch.basement_downstairs_iotmug_16_relay_relay_9') == 'off' else 0) }}{% endif %}
       - name: "Downstairs Zone 4 Min-Air Registers"
         unique_id: downstairs_zone_4_min_air_registers
         icon: mdi:air-filter
@@ -446,7 +446,7 @@ template:
         unique_id: downstairs_zone_4_register_1_source
         icon: mdi:source-branch
         state: >
-          {% set relay_state = states('switch.iotmug_16_relay_board_relay_8') %}
+          {% set relay_state = states('switch.basement_downstairs_iotmug_16_relay_relay_8') %}
           {% set demand = states('sensor.downstairs_zone_4_raw_registers') | int(0) %}
           {% set alloc = states('input_text.hvac_downstairs_min_airflow_allocation').split('|') %}
           {% set min_added = alloc[3] | int(0) %}
@@ -459,7 +459,7 @@ template:
         unique_id: downstairs_zone_4_register_2_source
         icon: mdi:source-branch
         state: >
-          {% set relay_state = states('switch.iotmug_16_relay_board_relay_9') %}
+          {% set relay_state = states('switch.basement_downstairs_iotmug_16_relay_relay_9') %}
           {% set demand = states('sensor.downstairs_zone_4_raw_registers') | int(0) %}
           {% set alloc = states('input_text.hvac_downstairs_min_airflow_allocation').split('|') %}
           {% set min_added = alloc[3] | int(0) %}
@@ -473,7 +473,7 @@ template:
         icon: mdi:air-filter
         unit_of_measurement: "registers"
         state: >
-          {% if states('switch.iotmug_16_relay_board_relay_10') not in ['on', 'off'] %}unknown{% else %}{{ (1 if states('switch.iotmug_16_relay_board_relay_10') == 'off' else 0) }}{% endif %}
+          {% if states('switch.basement_downstairs_iotmug_16_relay_relay_10') not in ['on', 'off'] %}unknown{% else %}{{ (1 if states('switch.basement_downstairs_iotmug_16_relay_relay_10') == 'off' else 0) }}{% endif %}
       - name: "Downstairs Zone 5 Min-Air Registers"
         unique_id: downstairs_zone_5_min_air_registers
         icon: mdi:air-filter
@@ -485,7 +485,7 @@ template:
         unique_id: downstairs_zone_5_register_1_source
         icon: mdi:source-branch
         state: >
-          {% set relay_state = states('switch.iotmug_16_relay_board_relay_10') %}
+          {% set relay_state = states('switch.basement_downstairs_iotmug_16_relay_relay_10') %}
           {% set demand = states('sensor.downstairs_zone_5_raw_registers') | int(0) %}
           {% set alloc = states('input_text.hvac_downstairs_min_airflow_allocation').split('|') %}
           {% set min_added = alloc[4] | int(0) %}

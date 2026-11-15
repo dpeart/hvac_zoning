@@ -69,7 +69,7 @@ This is deliberate: `!include_dir_named packages` would recursively glob **every
 
 ## Zone & Relay Topology
 
-### Upstairs (board: `switch.iotmug_16_relay_board_relay_N`)
+### Upstairs (device: `upstairs-iotmug-16-relay`; switch entities: `switch.iotmug_16_relay_board_relay_N`)
 
 | Zone | Register count (input_number) | Relays |
 |------|-------------------------------|--------|
@@ -83,7 +83,7 @@ This is deliberate: `!include_dir_named packages` would recursively glob **every
 
 Upstairs uses relays 1 through 10; relays 11 through 16 are unused and left non-energized (not shown on the dashboard).
 
-### Downstairs (board: `switch.iotmug_16_relay_board_relay_N` — placeholder prefix, verify)
+### Downstairs (device: `downstairs-iotmug-16-relay`; switch entities: `switch.basement_downstairs_iotmug_16_relay_relay_N`)
 
 | Zone | Register count (input_number) | Relays |
 |------|-------------------------------|--------|
@@ -94,7 +94,7 @@ Upstairs uses relays 1 through 10; relays 11 through 16 are unused and left non-
 | Z5 Stairs | 1 | relay 10 |
 | **Total** | **10** | 10 relays |
 
-Downstairs relay entity prefix is `iotmug_16_` (placeholder — verify against the ESPHome device).
+Downstairs uses the `downstairs-iotmug-16-relay` board, whose Home Assistant relay entities use the `switch.iotmug_16_relay_board_relay_N` naming pattern.
 
 ---
 
@@ -188,7 +188,7 @@ condition:
 ### Action Flow
 
 1. **Compute variables** (action, raw registers rN, total_demand, min_airflow, deficit, extras, effective rN_eff).
-2. **If zoning disabled (`hvac_*_zoning_enabled` off):** de-energize **all** active relays (open all dampers) — both in the control loop and via a dedicated state-triggered automation, so turning zoning off always opens the dampers immediately.
+2. **If zoning is disabled (`hvac_*_zoning_enabled` off):** de-energize all zoning-controlled relays (open all dampers). A dedicated fail-safe reconciles on disable, Home Assistant startup, and every 30 seconds while zoning remains disabled; it only sends OFF commands to relays not already OFF. Thus stopped/disabled control loops cannot leave zoning dampers energized, and repeated checks do not repeatedly command already-open dampers.
 3. **If action in [heating, cooling]:**
    - Log active loop summary.
    - If deficit > 0, log min-airflow warning.

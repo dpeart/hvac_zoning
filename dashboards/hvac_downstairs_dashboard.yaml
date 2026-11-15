@@ -171,16 +171,16 @@ views:
         title: "Dampers (relay ON = closed, OFF = open)"
         columns: 5
         entities:
-          - { entity: switch.iotmug_16_relay_board_relay_1,  name: Kitchen-a }
-          - { entity: switch.iotmug_16_relay_board_relay_2,  name: Kitchen-b }
-          - { entity: switch.iotmug_16_relay_board_relay_3,  name: Dining-a }
-          - { entity: switch.iotmug_16_relay_board_relay_4,  name: Dining-b }
-          - { entity: switch.iotmug_16_relay_board_relay_5,  name: Living-a }
-          - { entity: switch.iotmug_16_relay_board_relay_6,  name: Living-b }
-          - { entity: switch.iotmug_16_relay_board_relay_7,  name: Living-c }
-          - { entity: switch.iotmug_16_relay_board_relay_8,  name: Office-a }
-          - { entity: switch.iotmug_16_relay_board_relay_9,  name: Office-b }
-          - { entity: switch.iotmug_16_relay_board_relay_10, name: Stairs }
+          - { entity: switch.basement_downstairs_iotmug_16_relay_relay_1,  name: Kitchen-a }
+          - { entity: switch.basement_downstairs_iotmug_16_relay_relay_2,  name: Kitchen-b }
+          - { entity: switch.basement_downstairs_iotmug_16_relay_relay_3,  name: Dining-a }
+          - { entity: switch.basement_downstairs_iotmug_16_relay_relay_4,  name: Dining-b }
+          - { entity: switch.basement_downstairs_iotmug_16_relay_relay_5,  name: Living-a }
+          - { entity: switch.basement_downstairs_iotmug_16_relay_relay_6,  name: Living-b }
+          - { entity: switch.basement_downstairs_iotmug_16_relay_relay_7,  name: Living-c }
+          - { entity: switch.basement_downstairs_iotmug_16_relay_relay_8,  name: Office-a }
+          - { entity: switch.basement_downstairs_iotmug_16_relay_relay_9,  name: Office-b }
+          - { entity: switch.basement_downstairs_iotmug_16_relay_relay_10, name: Stairs }
 
       - type: gauge
         entity: sensor.downstairs_total_demand

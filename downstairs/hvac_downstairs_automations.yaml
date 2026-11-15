@@ -60,21 +60,37 @@ automation:
       - platform: state
         entity_id: input_boolean.hvac_downstairs_zoning_enabled
         to: "off"
+      - platform: homeassistant
+        event: start
+      - platform: time_pattern
+        seconds: "/30"
+    condition:
+      - condition: state
+        entity_id: input_boolean.hvac_downstairs_zoning_enabled
+        state: "off"
     mode: single
     action:
-      - service: homeassistant.turn_off
-        target:
-          entity_id:
-            - switch.iotmug_16_relay_board_relay_1
-            - switch.iotmug_16_relay_board_relay_2
-            - switch.iotmug_16_relay_board_relay_3
-            - switch.iotmug_16_relay_board_relay_4
-            - switch.iotmug_16_relay_board_relay_5
-            - switch.iotmug_16_relay_board_relay_6
-            - switch.iotmug_16_relay_board_relay_7
-            - switch.iotmug_16_relay_board_relay_8
-            - switch.iotmug_16_relay_board_relay_9
-            - switch.iotmug_16_relay_board_relay_10
+      - repeat:
+          for_each:
+            - switch.basement_downstairs_iotmug_16_relay_relay_1
+            - switch.basement_downstairs_iotmug_16_relay_relay_2
+            - switch.basement_downstairs_iotmug_16_relay_relay_3
+            - switch.basement_downstairs_iotmug_16_relay_relay_4
+            - switch.basement_downstairs_iotmug_16_relay_relay_5
+            - switch.basement_downstairs_iotmug_16_relay_relay_6
+            - switch.basement_downstairs_iotmug_16_relay_relay_7
+            - switch.basement_downstairs_iotmug_16_relay_relay_8
+            - switch.basement_downstairs_iotmug_16_relay_relay_9
+            - switch.basement_downstairs_iotmug_16_relay_relay_10
+          sequence:
+            - choose:
+                - conditions:
+                    - condition: template
+                      value_template: "{{ not is_state(repeat.item, 'off') }}"
+                  sequence:
+                    - service: homeassistant.turn_off
+                      target:
+                        entity_id: "{{ repeat.item }}"
       - service: input_text.set_value
         target:
           entity_id: input_text.hvac_downstairs_min_airflow_allocation
@@ -209,16 +225,16 @@ automation:
               - service: homeassistant.turn_off
                 target:
                   entity_id:
-                    - switch.iotmug_16_relay_board_relay_1
-                    - switch.iotmug_16_relay_board_relay_2
-                    - switch.iotmug_16_relay_board_relay_3
-                    - switch.iotmug_16_relay_board_relay_4
-                    - switch.iotmug_16_relay_board_relay_5
-                    - switch.iotmug_16_relay_board_relay_6
-                    - switch.iotmug_16_relay_board_relay_7
-                    - switch.iotmug_16_relay_board_relay_8
-                    - switch.iotmug_16_relay_board_relay_9
-                    - switch.iotmug_16_relay_board_relay_10
+                    - switch.basement_downstairs_iotmug_16_relay_relay_1
+                    - switch.basement_downstairs_iotmug_16_relay_relay_2
+                    - switch.basement_downstairs_iotmug_16_relay_relay_3
+                    - switch.basement_downstairs_iotmug_16_relay_relay_4
+                    - switch.basement_downstairs_iotmug_16_relay_relay_5
+                    - switch.basement_downstairs_iotmug_16_relay_relay_6
+                    - switch.basement_downstairs_iotmug_16_relay_relay_7
+                    - switch.basement_downstairs_iotmug_16_relay_relay_8
+                    - switch.basement_downstairs_iotmug_16_relay_relay_9
+                    - switch.basement_downstairs_iotmug_16_relay_relay_10
               - service: system_log.write
                 data:
                   level: warning
@@ -253,123 +269,123 @@ automation:
 
               # --- ZONE 1: Kitchen (Relays 1, 2) ---
               - choose:
-                - conditions: "{{ r1_eff >= 1 and not is_state('switch.iotmug_16_relay_board_relay_1', 'off') }}"
+                - conditions: "{{ r1_eff >= 1 and not is_state('switch.basement_downstairs_iotmug_16_relay_relay_1', 'off') }}"
                   sequence:
                     - service: homeassistant.turn_off
                       target:
-                        entity_id: switch.iotmug_16_relay_board_relay_1
-                - conditions: "{{ r1_eff < 1 and not is_state('switch.iotmug_16_relay_board_relay_1', 'on') }}"
+                        entity_id: switch.basement_downstairs_iotmug_16_relay_relay_1
+                - conditions: "{{ r1_eff < 1 and not is_state('switch.basement_downstairs_iotmug_16_relay_relay_1', 'on') }}"
                   sequence:
                     - service: homeassistant.turn_on
                       target:
-                        entity_id: switch.iotmug_16_relay_board_relay_1
+                        entity_id: switch.basement_downstairs_iotmug_16_relay_relay_1
               - choose:
-                - conditions: "{{ r1_eff >= 2 and not is_state('switch.iotmug_16_relay_board_relay_2', 'off') }}"
+                - conditions: "{{ r1_eff >= 2 and not is_state('switch.basement_downstairs_iotmug_16_relay_relay_2', 'off') }}"
                   sequence:
                     - service: homeassistant.turn_off
                       target:
-                        entity_id: switch.iotmug_16_relay_board_relay_2
-                - conditions: "{{ r1_eff < 2 and not is_state('switch.iotmug_16_relay_board_relay_2', 'on') }}"
+                        entity_id: switch.basement_downstairs_iotmug_16_relay_relay_2
+                - conditions: "{{ r1_eff < 2 and not is_state('switch.basement_downstairs_iotmug_16_relay_relay_2', 'on') }}"
                   sequence:
                     - service: homeassistant.turn_on
                       target:
-                        entity_id: switch.iotmug_16_relay_board_relay_2
+                        entity_id: switch.basement_downstairs_iotmug_16_relay_relay_2
 
               # --- ZONE 2: Dining (Relays 3, 4) ---
               - choose:
-                - conditions: "{{ r2_eff >= 1 and not is_state('switch.iotmug_16_relay_board_relay_3', 'off') }}"
+                - conditions: "{{ r2_eff >= 1 and not is_state('switch.basement_downstairs_iotmug_16_relay_relay_3', 'off') }}"
                   sequence:
                     - service: homeassistant.turn_off
                       target:
-                        entity_id: switch.iotmug_16_relay_board_relay_3
-                - conditions: "{{ r2_eff < 1 and not is_state('switch.iotmug_16_relay_board_relay_3', 'on') }}"
+                        entity_id: switch.basement_downstairs_iotmug_16_relay_relay_3
+                - conditions: "{{ r2_eff < 1 and not is_state('switch.basement_downstairs_iotmug_16_relay_relay_3', 'on') }}"
                   sequence:
                     - service: homeassistant.turn_on
                       target:
-                        entity_id: switch.iotmug_16_relay_board_relay_3
+                        entity_id: switch.basement_downstairs_iotmug_16_relay_relay_3
               - choose:
-                - conditions: "{{ r2_eff >= 2 and not is_state('switch.iotmug_16_relay_board_relay_4', 'off') }}"
+                - conditions: "{{ r2_eff >= 2 and not is_state('switch.basement_downstairs_iotmug_16_relay_relay_4', 'off') }}"
                   sequence:
                     - service: homeassistant.turn_off
                       target:
-                        entity_id: switch.iotmug_16_relay_board_relay_4
-                - conditions: "{{ r2_eff < 2 and not is_state('switch.iotmug_16_relay_board_relay_4', 'on') }}"
+                        entity_id: switch.basement_downstairs_iotmug_16_relay_relay_4
+                - conditions: "{{ r2_eff < 2 and not is_state('switch.basement_downstairs_iotmug_16_relay_relay_4', 'on') }}"
                   sequence:
                     - service: homeassistant.turn_on
                       target:
-                        entity_id: switch.iotmug_16_relay_board_relay_4
+                        entity_id: switch.basement_downstairs_iotmug_16_relay_relay_4
 
               # --- ZONE 3: Living (Relays 5, 6, 7) ---
               - choose:
-                - conditions: "{{ r3_eff >= 1 and not is_state('switch.iotmug_16_relay_board_relay_5', 'off') }}"
+                - conditions: "{{ r3_eff >= 1 and not is_state('switch.basement_downstairs_iotmug_16_relay_relay_5', 'off') }}"
                   sequence:
                     - service: homeassistant.turn_off
                       target:
-                        entity_id: switch.iotmug_16_relay_board_relay_5
-                - conditions: "{{ r3_eff < 1 and not is_state('switch.iotmug_16_relay_board_relay_5', 'on') }}"
+                        entity_id: switch.basement_downstairs_iotmug_16_relay_relay_5
+                - conditions: "{{ r3_eff < 1 and not is_state('switch.basement_downstairs_iotmug_16_relay_relay_5', 'on') }}"
                   sequence:
                     - service: homeassistant.turn_on
                       target:
-                        entity_id: switch.iotmug_16_relay_board_relay_5
+                        entity_id: switch.basement_downstairs_iotmug_16_relay_relay_5
               - choose:
-                - conditions: "{{ r3_eff >= 2 and not is_state('switch.iotmug_16_relay_board_relay_6', 'off') }}"
+                - conditions: "{{ r3_eff >= 2 and not is_state('switch.basement_downstairs_iotmug_16_relay_relay_6', 'off') }}"
                   sequence:
                     - service: homeassistant.turn_off
                       target:
-                        entity_id: switch.iotmug_16_relay_board_relay_6
-                - conditions: "{{ r3_eff < 2 and not is_state('switch.iotmug_16_relay_board_relay_6', 'on') }}"
+                        entity_id: switch.basement_downstairs_iotmug_16_relay_relay_6
+                - conditions: "{{ r3_eff < 2 and not is_state('switch.basement_downstairs_iotmug_16_relay_relay_6', 'on') }}"
                   sequence:
                     - service: homeassistant.turn_on
                       target:
-                        entity_id: switch.iotmug_16_relay_board_relay_6
+                        entity_id: switch.basement_downstairs_iotmug_16_relay_relay_6
               - choose:
-                - conditions: "{{ r3_eff >= 3 and not is_state('switch.iotmug_16_relay_board_relay_7', 'off') }}"
+                - conditions: "{{ r3_eff >= 3 and not is_state('switch.basement_downstairs_iotmug_16_relay_relay_7', 'off') }}"
                   sequence:
                     - service: homeassistant.turn_off
                       target:
-                        entity_id: switch.iotmug_16_relay_board_relay_7
-                - conditions: "{{ r3_eff < 3 and not is_state('switch.iotmug_16_relay_board_relay_7', 'on') }}"
+                        entity_id: switch.basement_downstairs_iotmug_16_relay_relay_7
+                - conditions: "{{ r3_eff < 3 and not is_state('switch.basement_downstairs_iotmug_16_relay_relay_7', 'on') }}"
                   sequence:
                     - service: homeassistant.turn_on
                       target:
-                        entity_id: switch.iotmug_16_relay_board_relay_7
+                        entity_id: switch.basement_downstairs_iotmug_16_relay_relay_7
 
               # --- ZONE 4: Office (Relays 8, 9) ---
               - choose:
-                - conditions: "{{ r4_eff >= 1 and not is_state('switch.iotmug_16_relay_board_relay_8', 'off') }}"
+                - conditions: "{{ r4_eff >= 1 and not is_state('switch.basement_downstairs_iotmug_16_relay_relay_8', 'off') }}"
                   sequence:
                     - service: homeassistant.turn_off
                       target:
-                        entity_id: switch.iotmug_16_relay_board_relay_8
-                - conditions: "{{ r4_eff < 1 and not is_state('switch.iotmug_16_relay_board_relay_8', 'on') }}"
+                        entity_id: switch.basement_downstairs_iotmug_16_relay_relay_8
+                - conditions: "{{ r4_eff < 1 and not is_state('switch.basement_downstairs_iotmug_16_relay_relay_8', 'on') }}"
                   sequence:
                     - service: homeassistant.turn_on
                       target:
-                        entity_id: switch.iotmug_16_relay_board_relay_8
+                        entity_id: switch.basement_downstairs_iotmug_16_relay_relay_8
               - choose:
-                - conditions: "{{ r4_eff >= 2 and not is_state('switch.iotmug_16_relay_board_relay_9', 'off') }}"
+                - conditions: "{{ r4_eff >= 2 and not is_state('switch.basement_downstairs_iotmug_16_relay_relay_9', 'off') }}"
                   sequence:
                     - service: homeassistant.turn_off
                       target:
-                        entity_id: switch.iotmug_16_relay_board_relay_9
-                - conditions: "{{ r4_eff < 2 and not is_state('switch.iotmug_16_relay_board_relay_9', 'on') }}"
+                        entity_id: switch.basement_downstairs_iotmug_16_relay_relay_9
+                - conditions: "{{ r4_eff < 2 and not is_state('switch.basement_downstairs_iotmug_16_relay_relay_9', 'on') }}"
                   sequence:
                     - service: homeassistant.turn_on
                       target:
-                        entity_id: switch.iotmug_16_relay_board_relay_9
+                        entity_id: switch.basement_downstairs_iotmug_16_relay_relay_9
 
               # --- ZONE 5: Stairs (Relay 10) ---
               - choose:
-                - conditions: "{{ r5_eff >= 1 and not is_state('switch.iotmug_16_relay_board_relay_10', 'off') }}"
+                - conditions: "{{ r5_eff >= 1 and not is_state('switch.basement_downstairs_iotmug_16_relay_relay_10', 'off') }}"
                   sequence:
                     - service: homeassistant.turn_off
                       target:
-                        entity_id: switch.iotmug_16_relay_board_relay_10
-                - conditions: "{{ r5_eff < 1 and not is_state('switch.iotmug_16_relay_board_relay_10', 'on') }}"
+                        entity_id: switch.basement_downstairs_iotmug_16_relay_relay_10
+                - conditions: "{{ r5_eff < 1 and not is_state('switch.basement_downstairs_iotmug_16_relay_relay_10', 'on') }}"
                   sequence:
                     - service: homeassistant.turn_on
                       target:
-                        entity_id: switch.iotmug_16_relay_board_relay_10
+                        entity_id: switch.basement_downstairs_iotmug_16_relay_relay_10
 
         default:
           - service: input_text.set_value
@@ -379,65 +395,65 @@ automation:
               value: "0|0|0|0|0"
           # --- FAILSAFE: OPEN ALL DAMPERS ---
           - choose:
-              - conditions: "{{ not is_state('switch.iotmug_16_relay_board_relay_1', 'off') }}"
+              - conditions: "{{ not is_state('switch.basement_downstairs_iotmug_16_relay_relay_1', 'off') }}"
                 sequence:
                   - service: homeassistant.turn_off
                     target:
-                      entity_id: switch.iotmug_16_relay_board_relay_1
+                      entity_id: switch.basement_downstairs_iotmug_16_relay_relay_1
           - choose:
-              - conditions: "{{ not is_state('switch.iotmug_16_relay_board_relay_2', 'off') }}"
+              - conditions: "{{ not is_state('switch.basement_downstairs_iotmug_16_relay_relay_2', 'off') }}"
                 sequence:
                   - service: homeassistant.turn_off
                     target:
-                      entity_id: switch.iotmug_16_relay_board_relay_2
+                      entity_id: switch.basement_downstairs_iotmug_16_relay_relay_2
           - choose:
-              - conditions: "{{ not is_state('switch.iotmug_16_relay_board_relay_3', 'off') }}"
+              - conditions: "{{ not is_state('switch.basement_downstairs_iotmug_16_relay_relay_3', 'off') }}"
                 sequence:
                   - service: homeassistant.turn_off
                     target:
-                      entity_id: switch.iotmug_16_relay_board_relay_3
+                      entity_id: switch.basement_downstairs_iotmug_16_relay_relay_3
           - choose:
-              - conditions: "{{ not is_state('switch.iotmug_16_relay_board_relay_4', 'off') }}"
+              - conditions: "{{ not is_state('switch.basement_downstairs_iotmug_16_relay_relay_4', 'off') }}"
                 sequence:
                   - service: homeassistant.turn_off
                     target:
-                      entity_id: switch.iotmug_16_relay_board_relay_4
+                      entity_id: switch.basement_downstairs_iotmug_16_relay_relay_4
           - choose:
-              - conditions: "{{ not is_state('switch.iotmug_16_relay_board_relay_5', 'off') }}"
+              - conditions: "{{ not is_state('switch.basement_downstairs_iotmug_16_relay_relay_5', 'off') }}"
                 sequence:
                   - service: homeassistant.turn_off
                     target:
-                      entity_id: switch.iotmug_16_relay_board_relay_5
+                      entity_id: switch.basement_downstairs_iotmug_16_relay_relay_5
           - choose:
-              - conditions: "{{ not is_state('switch.iotmug_16_relay_board_relay_6', 'off') }}"
+              - conditions: "{{ not is_state('switch.basement_downstairs_iotmug_16_relay_relay_6', 'off') }}"
                 sequence:
                   - service: homeassistant.turn_off
                     target:
-                      entity_id: switch.iotmug_16_relay_board_relay_6
+                      entity_id: switch.basement_downstairs_iotmug_16_relay_relay_6
           - choose:
-              - conditions: "{{ not is_state('switch.iotmug_16_relay_board_relay_7', 'off') }}"
+              - conditions: "{{ not is_state('switch.basement_downstairs_iotmug_16_relay_relay_7', 'off') }}"
                 sequence:
                   - service: homeassistant.turn_off
                     target:
-                      entity_id: switch.iotmug_16_relay_board_relay_7
+                      entity_id: switch.basement_downstairs_iotmug_16_relay_relay_7
           - choose:
-              - conditions: "{{ not is_state('switch.iotmug_16_relay_board_relay_8', 'off') }}"
+              - conditions: "{{ not is_state('switch.basement_downstairs_iotmug_16_relay_relay_8', 'off') }}"
                 sequence:
                   - service: homeassistant.turn_off
                     target:
-                      entity_id: switch.iotmug_16_relay_board_relay_8
+                      entity_id: switch.basement_downstairs_iotmug_16_relay_relay_8
           - choose:
-              - conditions: "{{ not is_state('switch.iotmug_16_relay_board_relay_9', 'off') }}"
+              - conditions: "{{ not is_state('switch.basement_downstairs_iotmug_16_relay_relay_9', 'off') }}"
                 sequence:
                   - service: homeassistant.turn_off
                     target:
-                      entity_id: switch.iotmug_16_relay_board_relay_9
+                      entity_id: switch.basement_downstairs_iotmug_16_relay_relay_9
           - choose:
-              - conditions: "{{ not is_state('switch.iotmug_16_relay_board_relay_10', 'off') }}"
+              - conditions: "{{ not is_state('switch.basement_downstairs_iotmug_16_relay_relay_10', 'off') }}"
                 sequence:
                   - service: homeassistant.turn_off
                     target:
-                      entity_id: switch.iotmug_16_relay_board_relay_10
+                      entity_id: switch.basement_downstairs_iotmug_16_relay_relay_10
           - service: system_log.write
             data:
               level: warning
