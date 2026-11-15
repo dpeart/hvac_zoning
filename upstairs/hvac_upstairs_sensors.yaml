@@ -12,7 +12,7 @@ template:
         state: >
           {% set test_mode = is_state('input_boolean.hvac_test_mode', 'on') %}
           {% set temp_ent = states('input_text.upstairs_hvac_zone_1_temp_entity') %}
-          {{ states('input_number.hvac_test_zone_1_temp') | float(70) if test_mode else states(temp_ent) | float(70) | round(1) }}
+          {{ states('input_number.hvac_test_zone_1_temp') | float(70) | round(1) if test_mode else (states(temp_ent) | float(70) | round(1) if is_number(states(temp_ent)) else 'unknown') }}
 
       - name: "Upstairs Zone 1 Error"
         unique_id: upstairs_zone_1_error
@@ -22,12 +22,14 @@ template:
           {% set test_mode = is_state('input_boolean.hvac_test_mode', 'on') %}
           {% set temp_ent = states('input_text.upstairs_hvac_zone_1_temp_entity') %}
           {% set target = states('input_number.hvac_test_target_temp') | float(72) if test_mode else state_attr('climate.upstairs_nativezone', 'temperature') | float(72) %}
-          {% set current = states('input_number.hvac_test_zone_1_temp') | float(70) if test_mode else states(temp_ent) | float(70) %}
+          {% set current = states('input_number.hvac_test_zone_1_temp') | float(70) if test_mode else states(temp_ent) %}
           {% set hvac_action = states('input_select.hvac_test_action') if test_mode else state_attr('climate.upstairs_nativezone', 'hvac_action') %}
-          {% if hvac_action == 'cooling' %}
-            {{ (current - target) | round(2) }}
+          {% if not is_number(current) or not is_number(target) %}
+            {{ 'unknown' }}
+          {% elif hvac_action == 'cooling' %}
+            {{ (current | float - target | float) | round(2) }}
           {% elif hvac_action == 'heating' %}
-            {{ (target - current) | round(2) }}
+            {{ (target | float - current | float) | round(2) }}
           {% else %}
             {{ 0.0 }}
           {% endif %}
@@ -69,7 +71,7 @@ template:
         state: >
           {% set test_mode = is_state('input_boolean.hvac_test_mode', 'on') %}
           {% set temp_ent = states('input_text.upstairs_hvac_zone_2_temp_entity') %}
-          {{ states('input_number.hvac_test_zone_2_temp') | float(70) if test_mode else states(temp_ent) | float(70) | round(1) }}
+          {{ states('input_number.hvac_test_zone_2_temp') | float(70) | round(1) if test_mode else (states(temp_ent) | float(70) | round(1) if is_number(states(temp_ent)) else 'unknown') }}
 
       - name: "Upstairs Zone 2 Error"
         unique_id: upstairs_zone_2_error
@@ -79,12 +81,14 @@ template:
           {% set test_mode = is_state('input_boolean.hvac_test_mode', 'on') %}
           {% set temp_ent = states('input_text.upstairs_hvac_zone_2_temp_entity') %}
           {% set target = states('input_number.hvac_test_target_temp') | float(72) if test_mode else state_attr('climate.upstairs_nativezone', 'temperature') | float(72) %}
-          {% set current = states('input_number.hvac_test_zone_2_temp') | float(70) if test_mode else states(temp_ent) | float(70) %}
+          {% set current = states('input_number.hvac_test_zone_2_temp') | float(70) if test_mode else states(temp_ent) %}
           {% set hvac_action = states('input_select.hvac_test_action') if test_mode else state_attr('climate.upstairs_nativezone', 'hvac_action') %}
-          {% if hvac_action == 'cooling' %}
-            {{ (current - target) | round(2) }}
+          {% if not is_number(current) or not is_number(target) %}
+            {{ 'unknown' }}
+          {% elif hvac_action == 'cooling' %}
+            {{ (current | float - target | float) | round(2) }}
           {% elif hvac_action == 'heating' %}
-            {{ (target - current) | round(2) }}
+            {{ (target | float - current | float) | round(2) }}
           {% else %}
             {{ 0.0 }}
           {% endif %}
@@ -126,7 +130,7 @@ template:
         state: >
           {% set test_mode = is_state('input_boolean.hvac_test_mode', 'on') %}
           {% set temp_ent = states('input_text.upstairs_hvac_zone_3_temp_entity') %}
-          {{ states('input_number.hvac_test_zone_3_temp') | float(70) if test_mode else states(temp_ent) | float(70) | round(1) }}
+          {{ states('input_number.hvac_test_zone_3_temp') | float(70) | round(1) if test_mode else (states(temp_ent) | float(70) | round(1) if is_number(states(temp_ent)) else 'unknown') }}
 
       - name: "Upstairs Zone 3 Error"
         unique_id: upstairs_zone_3_error
@@ -136,12 +140,14 @@ template:
           {% set test_mode = is_state('input_boolean.hvac_test_mode', 'on') %}
           {% set temp_ent = states('input_text.upstairs_hvac_zone_3_temp_entity') %}
           {% set target = states('input_number.hvac_test_target_temp') | float(72) if test_mode else state_attr('climate.upstairs_nativezone', 'temperature') | float(72) %}
-          {% set current = states('input_number.hvac_test_zone_3_temp') | float(70) if test_mode else states(temp_ent) | float(70) %}
+          {% set current = states('input_number.hvac_test_zone_3_temp') | float(70) if test_mode else states(temp_ent) %}
           {% set hvac_action = states('input_select.hvac_test_action') if test_mode else state_attr('climate.upstairs_nativezone', 'hvac_action') %}
-          {% if hvac_action == 'cooling' %}
-            {{ (current - target) | round(2) }}
+          {% if not is_number(current) or not is_number(target) %}
+            {{ 'unknown' }}
+          {% elif hvac_action == 'cooling' %}
+            {{ (current | float - target | float) | round(2) }}
           {% elif hvac_action == 'heating' %}
-            {{ (target - current) | round(2) }}
+            {{ (target | float - current | float) | round(2) }}
           {% else %}
             {{ 0.0 }}
           {% endif %}
@@ -183,7 +189,7 @@ template:
         state: >
           {% set test_mode = is_state('input_boolean.hvac_test_mode', 'on') %}
           {% set temp_ent = states('input_text.upstairs_hvac_zone_4_temp_entity') %}
-          {{ states('input_number.hvac_test_zone_4_temp') | float(70) if test_mode else states(temp_ent) | float(70) | round(1) }}
+          {{ states('input_number.hvac_test_zone_4_temp') | float(70) | round(1) if test_mode else (states(temp_ent) | float(70) | round(1) if is_number(states(temp_ent)) else 'unknown') }}
 
       - name: "Upstairs Zone 4 Error"
         unique_id: upstairs_zone_4_error
@@ -193,12 +199,14 @@ template:
           {% set test_mode = is_state('input_boolean.hvac_test_mode', 'on') %}
           {% set temp_ent = states('input_text.upstairs_hvac_zone_4_temp_entity') %}
           {% set target = states('input_number.hvac_test_target_temp') | float(72) if test_mode else state_attr('climate.upstairs_nativezone', 'temperature') | float(72) %}
-          {% set current = states('input_number.hvac_test_zone_4_temp') | float(70) if test_mode else states(temp_ent) | float(70) %}
+          {% set current = states('input_number.hvac_test_zone_4_temp') | float(70) if test_mode else states(temp_ent) %}
           {% set hvac_action = states('input_select.hvac_test_action') if test_mode else state_attr('climate.upstairs_nativezone', 'hvac_action') %}
-          {% if hvac_action == 'cooling' %}
-            {{ (current - target) | round(2) }}
+          {% if not is_number(current) or not is_number(target) %}
+            {{ 'unknown' }}
+          {% elif hvac_action == 'cooling' %}
+            {{ (current | float - target | float) | round(2) }}
           {% elif hvac_action == 'heating' %}
-            {{ (target - current) | round(2) }}
+            {{ (target | float - current | float) | round(2) }}
           {% else %}
             {{ 0.0 }}
           {% endif %}
@@ -240,7 +248,7 @@ template:
         state: >
           {% set test_mode = is_state('input_boolean.hvac_test_mode', 'on') %}
           {% set temp_ent = states('input_text.upstairs_hvac_zone_5_temp_entity') %}
-          {{ states('input_number.hvac_test_zone_5_temp') | float(70) if test_mode else states(temp_ent) | float(70) | round(1) }}
+          {{ states('input_number.hvac_test_zone_5_temp') | float(70) | round(1) if test_mode else (states(temp_ent) | float(70) | round(1) if is_number(states(temp_ent)) else 'unknown') }}
 
       - name: "Upstairs Zone 5 Error"
         unique_id: upstairs_zone_5_error
@@ -250,12 +258,14 @@ template:
           {% set test_mode = is_state('input_boolean.hvac_test_mode', 'on') %}
           {% set temp_ent = states('input_text.upstairs_hvac_zone_5_temp_entity') %}
           {% set target = states('input_number.hvac_test_target_temp') | float(72) if test_mode else state_attr('climate.upstairs_nativezone', 'temperature') | float(72) %}
-          {% set current = states('input_number.hvac_test_zone_5_temp') | float(70) if test_mode else states(temp_ent) | float(70) %}
+          {% set current = states('input_number.hvac_test_zone_5_temp') | float(70) if test_mode else states(temp_ent) %}
           {% set hvac_action = states('input_select.hvac_test_action') if test_mode else state_attr('climate.upstairs_nativezone', 'hvac_action') %}
-          {% if hvac_action == 'cooling' %}
-            {{ (current - target) | round(2) }}
+          {% if not is_number(current) or not is_number(target) %}
+            {{ 'unknown' }}
+          {% elif hvac_action == 'cooling' %}
+            {{ (current | float - target | float) | round(2) }}
           {% elif hvac_action == 'heating' %}
-            {{ (target - current) | round(2) }}
+            {{ (target | float - current | float) | round(2) }}
           {% else %}
             {{ 0.0 }}
           {% endif %}
@@ -297,7 +307,7 @@ template:
         state: >
           {% set test_mode = is_state('input_boolean.hvac_test_mode', 'on') %}
           {% set temp_ent = states('input_text.upstairs_hvac_zone_6_temp_entity') %}
-          {{ states('input_number.hvac_test_zone_6_temp') | float(70) if test_mode else states(temp_ent) | float(70) | round(1) }}
+          {{ states('input_number.hvac_test_zone_6_temp') | float(70) | round(1) if test_mode else (states(temp_ent) | float(70) | round(1) if is_number(states(temp_ent)) else 'unknown') }}
 
       - name: "Upstairs Zone 6 Error"
         unique_id: upstairs_zone_6_error
@@ -307,12 +317,14 @@ template:
           {% set test_mode = is_state('input_boolean.hvac_test_mode', 'on') %}
           {% set temp_ent = states('input_text.upstairs_hvac_zone_6_temp_entity') %}
           {% set target = states('input_number.hvac_test_target_temp') | float(72) if test_mode else state_attr('climate.upstairs_nativezone', 'temperature') | float(72) %}
-          {% set current = states('input_number.hvac_test_zone_6_temp') | float(70) if test_mode else states(temp_ent) | float(70) %}
+          {% set current = states('input_number.hvac_test_zone_6_temp') | float(70) if test_mode else states(temp_ent) %}
           {% set hvac_action = states('input_select.hvac_test_action') if test_mode else state_attr('climate.upstairs_nativezone', 'hvac_action') %}
-          {% if hvac_action == 'cooling' %}
-            {{ (current - target) | round(2) }}
+          {% if not is_number(current) or not is_number(target) %}
+            {{ 'unknown' }}
+          {% elif hvac_action == 'cooling' %}
+            {{ (current | float - target | float) | round(2) }}
           {% elif hvac_action == 'heating' %}
-            {{ (target - current) | round(2) }}
+            {{ (target | float - current | float) | round(2) }}
           {% else %}
             {{ 0.0 }}
           {% endif %}
@@ -344,6 +356,228 @@ template:
           {% set demand = states('sensor.upstairs_zone_6_demand') | float(0) %}
           {% set n_reg = [states('input_number.upstairs_hvac_zone_6_registers') | float(2), 2] | min %}
           {{ (demand * n_reg) | round(0, 'ceil') | int }}
+      - name: "Upstairs Zone 1 Actual Open Registers"
+        unique_id: upstairs_zone_1_actual_open_registers
+        icon: mdi:air-filter
+        unit_of_measurement: "registers"
+        state: >
+          {% if states('switch.iotmug_16_relay_board_relay_1') not in ['on', 'off'] %}unknown{% else %}{{ (1 if states('switch.iotmug_16_relay_board_relay_1') == 'off' else 0) }}{% endif %}
+      - name: "Upstairs Zone 1 Min-Air Registers"
+        unique_id: upstairs_zone_1_min_air_registers
+        icon: mdi:air-filter
+        unit_of_measurement: "registers"
+        state: >
+          {% set alloc = states('input_text.hvac_upstairs_min_airflow_allocation').split('|') %}
+          {{ alloc[0] | int(0) }}
+      - name: "Upstairs Zone 1 Register 1 Source"
+        unique_id: upstairs_zone_1_register_1_source
+        icon: mdi:source-branch
+        state: >
+          {% set relay_state = states('switch.iotmug_16_relay_board_relay_1') %}
+          {% set demand = states('sensor.upstairs_zone_1_raw_registers') | int(0) %}
+          {% set alloc = states('input_text.hvac_upstairs_min_airflow_allocation').split('|') %}
+          {% set min_added = alloc[0] | int(0) %}
+          {% if relay_state not in ['on', 'off'] %}Unknown
+          {% elif relay_state == 'on' %}Closed
+          {% elif 1 <= demand %}Demand-driven
+          {% elif 1 <= demand + min_added %}Minimum airflow
+          {% else %}Open (not demand/min-air allocation){% endif %}
+      - name: "Upstairs Zone 2 Actual Open Registers"
+        unique_id: upstairs_zone_2_actual_open_registers
+        icon: mdi:air-filter
+        unit_of_measurement: "registers"
+        state: >
+          {% if states('switch.iotmug_16_relay_board_relay_2') not in ['on', 'off'] or states('switch.iotmug_16_relay_board_relay_3') not in ['on', 'off'] %}unknown{% else %}{{ (1 if states('switch.iotmug_16_relay_board_relay_2') == 'off' else 0) + (1 if states('switch.iotmug_16_relay_board_relay_3') == 'off' else 0) }}{% endif %}
+      - name: "Upstairs Zone 2 Min-Air Registers"
+        unique_id: upstairs_zone_2_min_air_registers
+        icon: mdi:air-filter
+        unit_of_measurement: "registers"
+        state: >
+          {% set alloc = states('input_text.hvac_upstairs_min_airflow_allocation').split('|') %}
+          {{ alloc[1] | int(0) }}
+      - name: "Upstairs Zone 2 Register 1 Source"
+        unique_id: upstairs_zone_2_register_1_source
+        icon: mdi:source-branch
+        state: >
+          {% set relay_state = states('switch.iotmug_16_relay_board_relay_2') %}
+          {% set demand = states('sensor.upstairs_zone_2_raw_registers') | int(0) %}
+          {% set alloc = states('input_text.hvac_upstairs_min_airflow_allocation').split('|') %}
+          {% set min_added = alloc[1] | int(0) %}
+          {% if relay_state not in ['on', 'off'] %}Unknown
+          {% elif relay_state == 'on' %}Closed
+          {% elif 1 <= demand %}Demand-driven
+          {% elif 1 <= demand + min_added %}Minimum airflow
+          {% else %}Open (not demand/min-air allocation){% endif %}
+      - name: "Upstairs Zone 2 Register 2 Source"
+        unique_id: upstairs_zone_2_register_2_source
+        icon: mdi:source-branch
+        state: >
+          {% set relay_state = states('switch.iotmug_16_relay_board_relay_3') %}
+          {% set demand = states('sensor.upstairs_zone_2_raw_registers') | int(0) %}
+          {% set alloc = states('input_text.hvac_upstairs_min_airflow_allocation').split('|') %}
+          {% set min_added = alloc[1] | int(0) %}
+          {% if relay_state not in ['on', 'off'] %}Unknown
+          {% elif relay_state == 'on' %}Closed
+          {% elif 2 <= demand %}Demand-driven
+          {% elif 2 <= demand + min_added %}Minimum airflow
+          {% else %}Open (not demand/min-air allocation){% endif %}
+      - name: "Upstairs Zone 3 Actual Open Registers"
+        unique_id: upstairs_zone_3_actual_open_registers
+        icon: mdi:air-filter
+        unit_of_measurement: "registers"
+        state: >
+          {% if states('switch.iotmug_16_relay_board_relay_4') not in ['on', 'off'] or states('switch.iotmug_16_relay_board_relay_5') not in ['on', 'off'] %}unknown{% else %}{{ (1 if states('switch.iotmug_16_relay_board_relay_4') == 'off' else 0) + (1 if states('switch.iotmug_16_relay_board_relay_5') == 'off' else 0) }}{% endif %}
+      - name: "Upstairs Zone 3 Min-Air Registers"
+        unique_id: upstairs_zone_3_min_air_registers
+        icon: mdi:air-filter
+        unit_of_measurement: "registers"
+        state: >
+          {% set alloc = states('input_text.hvac_upstairs_min_airflow_allocation').split('|') %}
+          {{ alloc[2] | int(0) }}
+      - name: "Upstairs Zone 3 Register 1 Source"
+        unique_id: upstairs_zone_3_register_1_source
+        icon: mdi:source-branch
+        state: >
+          {% set relay_state = states('switch.iotmug_16_relay_board_relay_4') %}
+          {% set demand = states('sensor.upstairs_zone_3_raw_registers') | int(0) %}
+          {% set alloc = states('input_text.hvac_upstairs_min_airflow_allocation').split('|') %}
+          {% set min_added = alloc[2] | int(0) %}
+          {% if relay_state not in ['on', 'off'] %}Unknown
+          {% elif relay_state == 'on' %}Closed
+          {% elif 1 <= demand %}Demand-driven
+          {% elif 1 <= demand + min_added %}Minimum airflow
+          {% else %}Open (not demand/min-air allocation){% endif %}
+      - name: "Upstairs Zone 3 Register 2 Source"
+        unique_id: upstairs_zone_3_register_2_source
+        icon: mdi:source-branch
+        state: >
+          {% set relay_state = states('switch.iotmug_16_relay_board_relay_5') %}
+          {% set demand = states('sensor.upstairs_zone_3_raw_registers') | int(0) %}
+          {% set alloc = states('input_text.hvac_upstairs_min_airflow_allocation').split('|') %}
+          {% set min_added = alloc[2] | int(0) %}
+          {% if relay_state not in ['on', 'off'] %}Unknown
+          {% elif relay_state == 'on' %}Closed
+          {% elif 2 <= demand %}Demand-driven
+          {% elif 2 <= demand + min_added %}Minimum airflow
+          {% else %}Open (not demand/min-air allocation){% endif %}
+      - name: "Upstairs Zone 4 Actual Open Registers"
+        unique_id: upstairs_zone_4_actual_open_registers
+        icon: mdi:air-filter
+        unit_of_measurement: "registers"
+        state: >
+          {% if states('switch.iotmug_16_relay_board_relay_6') not in ['on', 'off'] %}unknown{% else %}{{ (1 if states('switch.iotmug_16_relay_board_relay_6') == 'off' else 0) }}{% endif %}
+      - name: "Upstairs Zone 4 Min-Air Registers"
+        unique_id: upstairs_zone_4_min_air_registers
+        icon: mdi:air-filter
+        unit_of_measurement: "registers"
+        state: >
+          {% set alloc = states('input_text.hvac_upstairs_min_airflow_allocation').split('|') %}
+          {{ alloc[3] | int(0) }}
+      - name: "Upstairs Zone 4 Register 1 Source"
+        unique_id: upstairs_zone_4_register_1_source
+        icon: mdi:source-branch
+        state: >
+          {% set relay_state = states('switch.iotmug_16_relay_board_relay_6') %}
+          {% set demand = states('sensor.upstairs_zone_4_raw_registers') | int(0) %}
+          {% set alloc = states('input_text.hvac_upstairs_min_airflow_allocation').split('|') %}
+          {% set min_added = alloc[3] | int(0) %}
+          {% if relay_state not in ['on', 'off'] %}Unknown
+          {% elif relay_state == 'on' %}Closed
+          {% elif 1 <= demand %}Demand-driven
+          {% elif 1 <= demand + min_added %}Minimum airflow
+          {% else %}Open (not demand/min-air allocation){% endif %}
+      - name: "Upstairs Zone 5 Actual Open Registers"
+        unique_id: upstairs_zone_5_actual_open_registers
+        icon: mdi:air-filter
+        unit_of_measurement: "registers"
+        state: >
+          {% if states('switch.iotmug_16_relay_board_relay_7') not in ['on', 'off'] or states('switch.iotmug_16_relay_board_relay_8') not in ['on', 'off'] %}unknown{% else %}{{ (1 if states('switch.iotmug_16_relay_board_relay_7') == 'off' else 0) + (1 if states('switch.iotmug_16_relay_board_relay_8') == 'off' else 0) }}{% endif %}
+      - name: "Upstairs Zone 5 Min-Air Registers"
+        unique_id: upstairs_zone_5_min_air_registers
+        icon: mdi:air-filter
+        unit_of_measurement: "registers"
+        state: >
+          {% set alloc = states('input_text.hvac_upstairs_min_airflow_allocation').split('|') %}
+          {{ alloc[4] | int(0) }}
+      - name: "Upstairs Zone 5 Register 1 Source"
+        unique_id: upstairs_zone_5_register_1_source
+        icon: mdi:source-branch
+        state: >
+          {% set relay_state = states('switch.iotmug_16_relay_board_relay_7') %}
+          {% set demand = states('sensor.upstairs_zone_5_raw_registers') | int(0) %}
+          {% set alloc = states('input_text.hvac_upstairs_min_airflow_allocation').split('|') %}
+          {% set min_added = alloc[4] | int(0) %}
+          {% if relay_state not in ['on', 'off'] %}Unknown
+          {% elif relay_state == 'on' %}Closed
+          {% elif 1 <= demand %}Demand-driven
+          {% elif 1 <= demand + min_added %}Minimum airflow
+          {% else %}Open (not demand/min-air allocation){% endif %}
+      - name: "Upstairs Zone 5 Register 2 Source"
+        unique_id: upstairs_zone_5_register_2_source
+        icon: mdi:source-branch
+        state: >
+          {% set relay_state = states('switch.iotmug_16_relay_board_relay_8') %}
+          {% set demand = states('sensor.upstairs_zone_5_raw_registers') | int(0) %}
+          {% set alloc = states('input_text.hvac_upstairs_min_airflow_allocation').split('|') %}
+          {% set min_added = alloc[4] | int(0) %}
+          {% if relay_state not in ['on', 'off'] %}Unknown
+          {% elif relay_state == 'on' %}Closed
+          {% elif 2 <= demand %}Demand-driven
+          {% elif 2 <= demand + min_added %}Minimum airflow
+          {% else %}Open (not demand/min-air allocation){% endif %}
+      - name: "Upstairs Zone 6 Actual Open Registers"
+        unique_id: upstairs_zone_6_actual_open_registers
+        icon: mdi:air-filter
+        unit_of_measurement: "registers"
+        state: >
+          {% if states('switch.iotmug_16_relay_board_relay_9') not in ['on', 'off'] or states('switch.iotmug_16_relay_board_relay_10') not in ['on', 'off'] %}unknown{% else %}{{ (1 if states('switch.iotmug_16_relay_board_relay_9') == 'off' else 0) + (1 if states('switch.iotmug_16_relay_board_relay_10') == 'off' else 0) }}{% endif %}
+      - name: "Upstairs Zone 6 Min-Air Registers"
+        unique_id: upstairs_zone_6_min_air_registers
+        icon: mdi:air-filter
+        unit_of_measurement: "registers"
+        state: >
+          {% set alloc = states('input_text.hvac_upstairs_min_airflow_allocation').split('|') %}
+          {{ alloc[5] | int(0) }}
+      - name: "Upstairs Zone 6 Register 1 Source"
+        unique_id: upstairs_zone_6_register_1_source
+        icon: mdi:source-branch
+        state: >
+          {% set relay_state = states('switch.iotmug_16_relay_board_relay_9') %}
+          {% set demand = states('sensor.upstairs_zone_6_raw_registers') | int(0) %}
+          {% set alloc = states('input_text.hvac_upstairs_min_airflow_allocation').split('|') %}
+          {% set min_added = alloc[5] | int(0) %}
+          {% if relay_state not in ['on', 'off'] %}Unknown
+          {% elif relay_state == 'on' %}Closed
+          {% elif 1 <= demand %}Demand-driven
+          {% elif 1 <= demand + min_added %}Minimum airflow
+          {% else %}Open (not demand/min-air allocation){% endif %}
+      - name: "Upstairs Zone 6 Register 2 Source"
+        unique_id: upstairs_zone_6_register_2_source
+        icon: mdi:source-branch
+        state: >
+          {% set relay_state = states('switch.iotmug_16_relay_board_relay_10') %}
+          {% set demand = states('sensor.upstairs_zone_6_raw_registers') | int(0) %}
+          {% set alloc = states('input_text.hvac_upstairs_min_airflow_allocation').split('|') %}
+          {% set min_added = alloc[5] | int(0) %}
+          {% if relay_state not in ['on', 'off'] %}Unknown
+          {% elif relay_state == 'on' %}Closed
+          {% elif 2 <= demand %}Demand-driven
+          {% elif 2 <= demand + min_added %}Minimum airflow
+          {% else %}Open (not demand/min-air allocation){% endif %}
+      - name: "Upstairs Actual Open Registers"
+        unique_id: upstairs_actual_open_registers
+        icon: mdi:air-filter
+        unit_of_measurement: "registers"
+        state: >
+          {% if not is_number(states('sensor.upstairs_zone_1_actual_open_registers')) or not is_number(states('sensor.upstairs_zone_2_actual_open_registers')) or not is_number(states('sensor.upstairs_zone_3_actual_open_registers')) or not is_number(states('sensor.upstairs_zone_4_actual_open_registers')) or not is_number(states('sensor.upstairs_zone_5_actual_open_registers')) or not is_number(states('sensor.upstairs_zone_6_actual_open_registers')) %}unknown
+          {% else %}{{ states('sensor.upstairs_zone_1_actual_open_registers') | int(0) + states('sensor.upstairs_zone_2_actual_open_registers') | int(0) + states('sensor.upstairs_zone_3_actual_open_registers') | int(0) + states('sensor.upstairs_zone_4_actual_open_registers') | int(0) + states('sensor.upstairs_zone_5_actual_open_registers') | int(0) + states('sensor.upstairs_zone_6_actual_open_registers') | int(0) }}{% endif %}
+      - name: "Upstairs Min-Air Registers Added"
+        unique_id: upstairs_min_air_registers_added
+        icon: mdi:air-filter
+        unit_of_measurement: "registers"
+        state: >
+          {{ states('sensor.upstairs_zone_1_min_air_registers') | int(0) + states('sensor.upstairs_zone_2_min_air_registers') | int(0) + states('sensor.upstairs_zone_3_min_air_registers') | int(0) + states('sensor.upstairs_zone_4_min_air_registers') | int(0) + states('sensor.upstairs_zone_5_min_air_registers') | int(0) + states('sensor.upstairs_zone_6_min_air_registers') | int(0) }}
+
       # --- TOTAL DEMAND (Sum of all zones - respects test mode) ---
       - name: "Upstairs Total Demand"
         unique_id: upstairs_total_demand

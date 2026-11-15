@@ -28,7 +28,7 @@ input_text:
   # --- Zone Temperature & Occupancy Entity IDs ---
   hvac_downstairs_zone_1_temp_entity:
     name: "Downstairs Zone 1 Temp Entity ID"
-    initial: "sensor.kitchen_climate_temperature"
+    initial: "sensor.kitchen_kitchen_climate_temperature"
     icon: mdi:thermometer
   hvac_downstairs_zone_1_occ_entity:
     name: "Downstairs Zone 1 Occupancy Entity ID"

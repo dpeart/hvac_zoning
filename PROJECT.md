@@ -83,7 +83,7 @@ This is deliberate: `!include_dir_named packages` would recursively glob **every
 
 Upstairs uses relays 1 through 10; relays 11 through 16 are unused and left non-energized (not shown on the dashboard).
 
-### Downstairs (board: `switch.iotmug_2_relay_board_relay_N` — placeholder prefix, verify)
+### Downstairs (board: `switch.iotmug_16_relay_board_relay_N` — placeholder prefix, verify)
 
 | Zone | Register count (input_number) | Relays |
 |------|-------------------------------|--------|
@@ -94,7 +94,7 @@ Upstairs uses relays 1 through 10; relays 11 through 16 are unused and left non-
 | Z5 Stairs | 1 | relay 10 |
 | **Total** | **10** | 10 relays |
 
-Downstairs relay entity prefix is `iotmug_2_` (placeholder — verify against the ESPHome device).
+Downstairs relay entity prefix is `iotmug_16_` (placeholder — verify against the ESPHome device).
 
 ---
 
@@ -147,9 +147,9 @@ alloc         = allocate_by_error(deficit, err1..errN, caps)
 rN_eff        = rN + alloc[N]   # effective register count used by relays
 ```
 
-**Error priority:** at each allocation step, the eligible zone (spare capacity, not yet given a register this pass) with the **largest positive error** receives a register, one at a time, repeating passes until the deficit is satisfied. Errors equal to or below 0 are served last.
+**When demand exists:** each allocation pass gives at most one extra register per zone, prioritizing the highest signed-error zones first.
 
-**Fallback (no zone needs airflow):** when *all* errors are ≤ 0 (e.g., all zones over-met in heating: at/above setpoint) but the system is still calling, allocation serves the zone **closest to setpoint** (least over-met, i.e., highest/least-negative error) first — so the compulsory air heads toward the nearly-satisfied rooms rather than the most over-met ones. Ties resolve to the thermostat zone first, then physical order, so the blower always has a path to the stat while calling:
+**When total demand is zero:** minimum-air registers are concentrated into the coolest eligible zone (highest signed error), filling it to physical capacity before moving to the next-coolest. Thermostat zone wins ties. In both modes the requested minimum register floor is preserved, subject to total zone capacity.
 - Upstairs: thermostat zone **Master Bed (Z5)**, capacities Z1=1, Z2=2, Z3=2, Z4=1, Z5=2, Z6=2.
 - Downstairs: thermostat zone **Stairs (Z5)**, capacities Z1=2, Z2=2, Z3=3, Z4=2, Z5=1.
 
@@ -166,7 +166,7 @@ open relay N_i  iff  rN_eff ≥ i
 close relay N_i otherwise (default)
 ```
 
-(Relay OFF = damper OPEN = airflow; relay ON = damper CLOSED.)
+Each relay's target is evaluated on every control loop, but the automation issues a relay service call **only when its current state differs from the target**. Relay OFF means damper open; relay ON means damper closed. This avoids repeatedly commanding motors that are already in position while preserving the same register-to-relay mapping.
 
 ---
 
@@ -237,7 +237,7 @@ The error sensors are test-mode aware: they substitute test inputs when `input_b
 | `input_number.hvac_test_target_temp` | Test setpoint (°F) |
 | `input_number.hvac_test_zone_N_temp` | Per-zone current temp slider (°F) — 0.1°F steps |
 
-When test mode is enabled, an automation copies each zone's assigned temperature sensor value into its corresponding test slider. Only numeric readings from 50–90°F are copied; unavailable or out-of-range readings are logged and leave that slider unchanged. The same initialization behavior applies to downstairs test mode.
+When test mode is enabled, an automation copies each zone's assigned temperature sensor value into its corresponding test slider. Only numeric readings from 50–90°F are copied. If a sensor is unavailable or out of range, the slider is reset to the test target temperature and a warning is logged, preventing a stale restored slider value from silently being used. In production mode, unavailable or non-numeric zone temperature sensors yield an `unknown` zone temperature/error instead of assuming 70°F; the zone then has no sensor-derived demand. Minimum-airflow allocation can still open its registers if needed to meet the configured airflow floor.
 
 The legacy `input_number.hvac_test_zone_N_registers` (0–13 sliders) still exist but are **no longer read** by the automation; they were replaced by the temperature-driven test bench. Leave them unused.
 
@@ -256,6 +256,13 @@ The legacy `input_number.hvac_test_zone_N_registers` (0–13 sliders) still exis
 ## Dashboard (Lovelace)
 
 The dashboard (`dashboards/hvac_zoning_dashboard.yaml`, path `hvac-zoning`) has two views — Upstairs and Downstairs. Each view has **conditionally visible cards** keyed on the floor's test-mode boolean:
+
+### Demand and actual airflow diagnostics
+
+The dashboard distinguishes **Total Demand** (demand-derived register target) from **Actual Open Registers** (counted from current relay states; OFF means open) and **Min-Air Registers Added** (the most recent active heating/cooling loop's allocation). Zone cards show demand, min-air allocation, and actual open counts. A register-source list labels each physical register `Demand-driven`, `Minimum airflow`, `Closed`, `Open (not demand/min-air allocation)`, or `Unknown`.
+
+Actual-open counts reflect relay states continuously, including idle, failsafe, or manual changes. Min-air/source attribution reflects the last active control-loop allocation, not guaranteed causal history after an out-of-band relay change. Unavailable relay states show as `Unknown`, not closed.
+
 
 | Card | Visibility | Contents |
 |------|-----------|----------|
@@ -280,7 +287,7 @@ The dashboard (`dashboards/hvac_zoning_dashboard.yaml`, path `hvac-zoning`) has 
 1. **Load packages:** the HVAC package files load on restart via the explicit `!include` entries in `configuration.yaml` under `homeassistant.packages`. Restart or "Reload all YAML" after editing entity definitions.
 2. **Dashboard:** the YAML-mode dashboard `dashboards/hvac_zoning_dashboard.yaml` is registered under `lovelace: dashboards: hvac-zoning:` in `configuration.yaml` (no top-level `lovelace: mode`, so the default Overview stays intact) and loads from disk on restart. Edits to the `.yaml` need a restart (or Dev Tools → YAML → reload Lovelace).
 3. **Assign temp sensors:** in production mode, use the "Zone Temperature Sensors" card (or Developer Tools → States) to point each `input_text.*_temp_entity` at the real sensor entity ID. Upstairs defaults are `sensor.trisensor_8_air_temperature`, `sensor.bed_1_climate_temperature`, `sensor.bed_2_climate_temperature`, `sensor.bed_3_climate_temperature`, `sensor.upstairs_nativezone_temperature`, and `sensor.master_bath_climate_temperature` for Zones 1–6, respectively.
-4. **Verify zones:** confirm the thermostat climate entity matches the floor (`climate.upstairs_nativezone` / `climate.downstairs_nativezone`), and relay entity prefixes (`switch.iotmug_16_relay_board_relay_N` / `switch.iotmug_2_relay_board_relay_N`).
+4. **Verify zones:** confirm the thermostat climate entity matches the floor (`climate.upstairs_nativezone` / `climate.downstairs_nativezone`), and relay entity prefixes (`switch.iotmug_16_relay_board_relay_N` / `switch.iotmug_16_relay_board_relay_N`).
 
 ---
 
@@ -323,7 +330,7 @@ The dashboard (`dashboards/hvac_zoning_dashboard.yaml`, path `hvac-zoning`) has 
 
 ## Future Work / Open Items
 
-- [ ] Verify downstairs relay board entity prefix (`iotmug_2_` is a placeholder).
+- [ ] Verify downstairs relay board entity prefix (`iotmug_16_` is a placeholder).
 - [ ] Assign real temp sensors for Bed 3 / Master Bath (upstairs Z4/Z6) and all downstairs zones.
 - [ ] Occupancy: if real occupancy sensors are never installed, the weight inputs (both 1.0) make occupancy a no-op — safe to leave.
 - [ ] `hvac_test_zone_N_registers` legacy sliders could be removed once the temperature-driven bench is confirmed stable.

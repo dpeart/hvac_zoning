@@ -31,6 +31,8 @@ views:
               - sensor.upstairs_zone_1_error
               - sensor.upstairs_zone_1_demand
               - sensor.upstairs_zone_1_raw_registers
+              - sensor.upstairs_zone_1_min_air_registers
+              - sensor.upstairs_zone_1_actual_open_registers
           - type: entities
             title: "Bed 1"
             show_header_toggle: false
@@ -39,6 +41,8 @@ views:
               - sensor.upstairs_zone_2_error
               - sensor.upstairs_zone_2_demand
               - sensor.upstairs_zone_2_raw_registers
+              - sensor.upstairs_zone_2_min_air_registers
+              - sensor.upstairs_zone_2_actual_open_registers
           - type: entities
             title: "Bed 2"
             show_header_toggle: false
@@ -47,6 +51,8 @@ views:
               - sensor.upstairs_zone_3_error
               - sensor.upstairs_zone_3_demand
               - sensor.upstairs_zone_3_raw_registers
+              - sensor.upstairs_zone_3_min_air_registers
+              - sensor.upstairs_zone_3_actual_open_registers
           - type: entities
             title: "Bed 3"
             show_header_toggle: false
@@ -55,6 +61,8 @@ views:
               - sensor.upstairs_zone_4_error
               - sensor.upstairs_zone_4_demand
               - sensor.upstairs_zone_4_raw_registers
+              - sensor.upstairs_zone_4_min_air_registers
+              - sensor.upstairs_zone_4_actual_open_registers
           - type: entities
             title: "Master Bed"
             show_header_toggle: false
@@ -63,6 +71,8 @@ views:
               - sensor.upstairs_zone_5_error
               - sensor.upstairs_zone_5_demand
               - sensor.upstairs_zone_5_raw_registers
+              - sensor.upstairs_zone_5_min_air_registers
+              - sensor.upstairs_zone_5_actual_open_registers
           - type: entities
             title: "Master Bath"
             show_header_toggle: false
@@ -71,6 +81,8 @@ views:
               - sensor.upstairs_zone_6_error
               - sensor.upstairs_zone_6_demand
               - sensor.upstairs_zone_6_raw_registers
+              - sensor.upstairs_zone_6_min_air_registers
+              - sensor.upstairs_zone_6_actual_open_registers
 
       # ---------- PRODUCTION ONLY: history ----------
       - type: conditional
@@ -209,6 +221,31 @@ views:
         severity: { green: 0, yellow: 5, red: 8 }
 
       - type: entities
+        title: Register Counts
+        show_header_toggle: false
+        entities:
+          - entity: sensor.upstairs_actual_open_registers
+            name: Actual Open Registers (relay states)
+          - entity: sensor.upstairs_min_air_registers_added
+            name: Min-Air Registers Added (last active loop)
+
+      - type: entities
+        title: Register Source (last allocation vs actual relay state)
+        show_header_toggle: false
+        entities:
+          - sensor.upstairs_zone_1_register_1_source
+          - sensor.upstairs_zone_2_register_1_source
+          - sensor.upstairs_zone_2_register_2_source
+          - sensor.upstairs_zone_3_register_1_source
+          - sensor.upstairs_zone_3_register_2_source
+          - sensor.upstairs_zone_4_register_1_source
+          - sensor.upstairs_zone_5_register_1_source
+          - sensor.upstairs_zone_5_register_2_source
+          - sensor.upstairs_zone_6_register_1_source
+          - sensor.upstairs_zone_6_register_2_source
+
+
+      - type: entities
         title: Last Automation Run
         show_header_toggle: false
         entities:
@@ -253,6 +290,8 @@ views:
               - sensor.downstairs_zone_1_error
               - sensor.downstairs_zone_1_demand
               - sensor.downstairs_zone_1_raw_registers
+              - sensor.downstairs_zone_1_min_air_registers
+              - sensor.downstairs_zone_1_actual_open_registers
           - type: entities
             title: "Z2 · Dining"
             show_header_toggle: false
@@ -261,6 +300,8 @@ views:
               - sensor.downstairs_zone_2_error
               - sensor.downstairs_zone_2_demand
               - sensor.downstairs_zone_2_raw_registers
+              - sensor.downstairs_zone_2_min_air_registers
+              - sensor.downstairs_zone_2_actual_open_registers
           - type: entities
             title: "Z3 · Living"
             show_header_toggle: false
@@ -269,6 +310,8 @@ views:
               - sensor.downstairs_zone_3_error
               - sensor.downstairs_zone_3_demand
               - sensor.downstairs_zone_3_raw_registers
+              - sensor.downstairs_zone_3_min_air_registers
+              - sensor.downstairs_zone_3_actual_open_registers
           - type: entities
             title: "Z4 · Office"
             show_header_toggle: false
@@ -277,6 +320,8 @@ views:
               - sensor.downstairs_zone_4_error
               - sensor.downstairs_zone_4_demand
               - sensor.downstairs_zone_4_raw_registers
+              - sensor.downstairs_zone_4_min_air_registers
+              - sensor.downstairs_zone_4_actual_open_registers
           - type: entities
             title: "Z5 · Stairs"
             show_header_toggle: false
@@ -285,6 +330,8 @@ views:
               - sensor.downstairs_zone_5_error
               - sensor.downstairs_zone_5_demand
               - sensor.downstairs_zone_5_raw_registers
+              - sensor.downstairs_zone_5_min_air_registers
+              - sensor.downstairs_zone_5_actual_open_registers
 
       # ---------- PRODUCTION ONLY: history ----------
       - type: conditional
@@ -398,16 +445,16 @@ views:
         title: "Dampers (relay ON = closed, OFF = open)"
         columns: 5
         entities:
-          - { entity: switch.iotmug_2_relay_board_relay_1,  name: Kitchen-a }
-          - { entity: switch.iotmug_2_relay_board_relay_2,  name: Kitchen-b }
-          - { entity: switch.iotmug_2_relay_board_relay_3,  name: Dining-a }
-          - { entity: switch.iotmug_2_relay_board_relay_4,  name: Dining-b }
-          - { entity: switch.iotmug_2_relay_board_relay_5,  name: Living-a }
-          - { entity: switch.iotmug_2_relay_board_relay_6,  name: Living-b }
-          - { entity: switch.iotmug_2_relay_board_relay_7,  name: Living-c }
-          - { entity: switch.iotmug_2_relay_board_relay_8,  name: Office-a }
-          - { entity: switch.iotmug_2_relay_board_relay_9,  name: Office-b }
-          - { entity: switch.iotmug_2_relay_board_relay_10, name: Stairs }
+          - { entity: switch.iotmug_16_relay_board_relay_1,  name: Kitchen-a }
+          - { entity: switch.iotmug_16_relay_board_relay_2,  name: Kitchen-b }
+          - { entity: switch.iotmug_16_relay_board_relay_3,  name: Dining-a }
+          - { entity: switch.iotmug_16_relay_board_relay_4,  name: Dining-b }
+          - { entity: switch.iotmug_16_relay_board_relay_5,  name: Living-a }
+          - { entity: switch.iotmug_16_relay_board_relay_6,  name: Living-b }
+          - { entity: switch.iotmug_16_relay_board_relay_7,  name: Living-c }
+          - { entity: switch.iotmug_16_relay_board_relay_8,  name: Office-a }
+          - { entity: switch.iotmug_16_relay_board_relay_9,  name: Office-b }
+          - { entity: switch.iotmug_16_relay_board_relay_10, name: Stairs }
 
       - type: gauge
         entity: sensor.downstairs_total_demand
@@ -415,6 +462,31 @@ views:
         min: 0
         max: 10
         severity: { green: 0, yellow: 4, red: 8 }
+
+      - type: entities
+        title: Register Counts
+        show_header_toggle: false
+        entities:
+          - entity: sensor.downstairs_actual_open_registers
+            name: Actual Open Registers (relay states)
+          - entity: sensor.downstairs_min_air_registers_added
+            name: Min-Air Registers Added (last active loop)
+
+      - type: entities
+        title: Register Source (last allocation vs actual relay state)
+        show_header_toggle: false
+        entities:
+          - sensor.downstairs_zone_1_register_1_source
+          - sensor.downstairs_zone_1_register_2_source
+          - sensor.downstairs_zone_2_register_1_source
+          - sensor.downstairs_zone_2_register_2_source
+          - sensor.downstairs_zone_3_register_1_source
+          - sensor.downstairs_zone_3_register_2_source
+          - sensor.downstairs_zone_3_register_3_source
+          - sensor.downstairs_zone_4_register_1_source
+          - sensor.downstairs_zone_4_register_2_source
+          - sensor.downstairs_zone_5_register_1_source
+
 
       - type: entities
         title: Last Automation Run

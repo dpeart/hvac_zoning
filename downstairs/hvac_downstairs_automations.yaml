@@ -1,4 +1,4 @@
-﻿automation:
+automation:
   - id: downstairs_initialize_test_zone_temps
     alias: "HVAC Downstairs: Initialize Test Zone Temperatures"
     description: "Copies assigned zone sensor values into test temperature sliders when downstairs test mode is enabled."
@@ -40,13 +40,18 @@
                       data:
                         value: "{{ sensor_value | float | round(1) }}"
               default:
+                - service: input_number.set_value
+                  target:
+                    entity_id: "{{ repeat.item.test_helper }}"
+                  data:
+                    value: "{{ states('input_number.hvac_downstairs_test_target_temp') | float(72) }}"
                 - service: system_log.write
                   data:
                     level: warning
                     message: >
                       HVAC Downstairs test mode: {{ repeat.item.zone }} sensor
                       {{ sensor_entity }} has invalid or out-of-range value
-                      {{ sensor_value }}; test temperature was not initialized.
+                      {{ sensor_value }}; test temperature was reset to the test target.
 
   - id: downstairs_deenergize_relays_on_disable
     alias: "HVAC Downstairs: De-energize Relays When Zoning Disabled"
@@ -60,16 +65,21 @@
       - service: homeassistant.turn_off
         target:
           entity_id:
-            - switch.iotmug_2_relay_board_relay_1
-            - switch.iotmug_2_relay_board_relay_2
-            - switch.iotmug_2_relay_board_relay_3
-            - switch.iotmug_2_relay_board_relay_4
-            - switch.iotmug_2_relay_board_relay_5
-            - switch.iotmug_2_relay_board_relay_6
-            - switch.iotmug_2_relay_board_relay_7
-            - switch.iotmug_2_relay_board_relay_8
-            - switch.iotmug_2_relay_board_relay_9
-            - switch.iotmug_2_relay_board_relay_10
+            - switch.iotmug_16_relay_board_relay_1
+            - switch.iotmug_16_relay_board_relay_2
+            - switch.iotmug_16_relay_board_relay_3
+            - switch.iotmug_16_relay_board_relay_4
+            - switch.iotmug_16_relay_board_relay_5
+            - switch.iotmug_16_relay_board_relay_6
+            - switch.iotmug_16_relay_board_relay_7
+            - switch.iotmug_16_relay_board_relay_8
+            - switch.iotmug_16_relay_board_relay_9
+            - switch.iotmug_16_relay_board_relay_10
+      - service: input_text.set_value
+        target:
+          entity_id: input_text.hvac_downstairs_min_airflow_allocation
+        data:
+          value: "0|0|0|0|0"
       - service: system_log.write
         data:
           level: warning
@@ -103,34 +113,28 @@
       total_demand: "{{ r1 + r2 + r3 + r4 + r5 }}"
       total_max_registers: 10
       min_airflow: "{{ [states('input_number.hvac_downstairs_min_airflow') | int(1), 10] | min }}"
-      # Allocate minimum-airflow deficit one register at a time, prioritizing
-      # zones by their current signed error (positive = needs airflow in the
-      # active mode), highest error first. This directs the compulsory airflow
-      # to the zones that most need it instead of a fixed rotation.
-      # - Zones already at relay capacity (Z1=2, Z2=2, Z3=3, Z4=2, Z5=1)
-      #   are skipped.
-      # - If all zones have error <= 0 (no zone needs airflow but the system is
-      #   still calling), fall back to serving the zone closest to setpoint
-      #   (least over-met, i.e., highest/least-negative error) first. Stairs
-      #   (Z5) is the thermostat zone, so it wins ties so the blower always
-      #   has a path to the stat while calling.
-      # Up to 3 passes cover every zone's maximum spare of 3 (Living Z3).
+      # When demand exists, allocate the minimum-airflow deficit one register
+      # per zone per pass in signed-error priority order. If total demand is
+      # zero, fill the coolest eligible zone (highest signed error) to its
+      # physical relay capacity before moving to the next-coolest. This keeps
+      # the minimum-airflow register floor while concentrating airflow where
+      # it best reduces temperature differences. Thermostat zone (Z5) wins ties.
+      # Up to 3 passes cover Living Z3's maximum spare of 3.
       # NOTE: only Jinja2-core features are used here (namespace scalar
       # mutation); the `combine` filter is NOT available in HA and previously
       # caused the whole automation to fail to load.
       deficit: "{{ [min_airflow - total_demand, 0] | max }}"
       # Signed errors (same convention as the *_error sensors):
       # positive = needs airflow in the active mode.
-      err1: "{{ states('sensor.downstairs_zone_1_error') | float(0) }}"
-      err2: "{{ states('sensor.downstairs_zone_2_error') | float(0) }}"
-      err3: "{{ states('sensor.downstairs_zone_3_error') | float(0) }}"
-      err4: "{{ states('sensor.downstairs_zone_4_error') | float(0) }}"
-      err5: "{{ states('sensor.downstairs_zone_5_error') | float(0) }}"
+      err1: "{{ states('sensor.downstairs_zone_1_error') | float(-9999) }}"
+      err2: "{{ states('sensor.downstairs_zone_2_error') | float(-9999) }}"
+      err3: "{{ states('sensor.downstairs_zone_3_error') | float(-9999) }}"
+      err4: "{{ states('sensor.downstairs_zone_4_error') | float(-9999) }}"
+      err5: "{{ states('sensor.downstairs_zone_5_error') | float(-9999) }}"
       ns_alloc: >
         {% set ns = namespace(left = deficit | int(0),
                               e1 = 0, e2 = 0, e3 = 0, e4 = 0, e5 = 0,
                               a1 = 0, a2 = 0, a3 = 0, a4 = 0, a5 = 0) %}
-        {% set any_pos = ([err1, err2, err3, err4, err5] | max) > 0 %}
         {# Up to 3 passes; at most one register per zone per pass. When any
            zone has a positive error, allocate by highest error first (ties ->
            thermostat zone Z5 first, then Z1 -> Z2 -> Z3 -> Z4). When NO zone
@@ -149,7 +153,7 @@
               {% set s3 = [3 - r3 | int(0) - ns.e3, 0] | max %}
               {% set s4 = [2 - r4 | int(0) - ns.e4, 0] | max %}
               {% set s5 = [1 - r5 | int(0) - ns.e5, 0] | max %}
-              {% if any_pos %}
+              {% if total_demand | int(0) > 0 %}
                 {% set c1 = err1 if (s1 > 0 and ns.a1 == 0) else -9999 %}
                 {% set c2 = err2 if (s2 > 0 and ns.a2 == 0) else -9999 %}
                 {% set c3 = err3 if (s3 > 0 and ns.a3 == 0) else -9999 %}
@@ -163,28 +167,33 @@
                 {% elif c4 >= emax %}{% set ns.e4 = ns.e4 + 1 %}{% set ns.left = ns.left - 1 %}{% set ns.a4 = 1 %}
                 {% endif %}
               {% else %}
-                {# fallback: all zones over-met (errors <= 0), stat still
-                   calling. Give airflow to the zone closest to setpoint
-                   (highest/least-negative error) first so the compulsory air
-                   heads toward the rooms that are nearly satisfied rather than
-                   the most over-met ones. Thermostat zone (Z5) wins ties. #}
-                {% set c1 = err1 if (s1 > 0 and ns.a1 == 0) else -9999 %}
-                {% set c2 = err2 if (s2 > 0 and ns.a2 == 0) else -9999 %}
-                {% set c3 = err3 if (s3 > 0 and ns.a3 == 0) else -9999 %}
-                {% set c4 = err4 if (s4 > 0 and ns.a4 == 0) else -9999 %}
-                {% set c5 = err5 if (s5 > 0 and ns.a5 == 0) else -9999 %}
+                                                                {# Total demand is zero: repeatedly fill the eligible zone
+                   with the highest signed error to physical capacity before
+                   moving to the next. The configured minimum register floor
+                   is unchanged; this concentrates it in the coolest zones.
+                   Thermostat zone wins ties. #}
+                {% set c1 = err1 if (s1 > 0) else -9999 %}
+                {% set c2 = err2 if (s2 > 0) else -9999 %}
+                {% set c3 = err3 if (s3 > 0) else -9999 %}
+                {% set c4 = err4 if (s4 > 0) else -9999 %}
+                {% set c5 = err5 if (s5 > 0) else -9999 %}
                 {% set emax = [c1, c2, c3, c4, c5] | max %}
-                {% if c5 >= emax %}{% set ns.e5 = ns.e5 + 1 %}{% set ns.left = ns.left - 1 %}{% set ns.a5 = 1 %}
-                {% elif c1 >= emax %}{% set ns.e1 = ns.e1 + 1 %}{% set ns.left = ns.left - 1 %}{% set ns.a1 = 1 %}
-                {% elif c2 >= emax %}{% set ns.e2 = ns.e2 + 1 %}{% set ns.left = ns.left - 1 %}{% set ns.a2 = 1 %}
-                {% elif c3 >= emax %}{% set ns.e3 = ns.e3 + 1 %}{% set ns.left = ns.left - 1 %}{% set ns.a3 = 1 %}
-                {% elif c4 >= emax %}{% set ns.e4 = ns.e4 + 1 %}{% set ns.left = ns.left - 1 %}{% set ns.a4 = 1 %}
+                {% if c5 >= emax %}{% set ns.e5 = ns.e5 + 1 %}{% set ns.left = ns.left - 1 %}
+                {% elif c1 >= emax %}{% set ns.e1 = ns.e1 + 1 %}{% set ns.left = ns.left - 1 %}
+                {% elif c2 >= emax %}{% set ns.e2 = ns.e2 + 1 %}{% set ns.left = ns.left - 1 %}
+                {% elif c3 >= emax %}{% set ns.e3 = ns.e3 + 1 %}{% set ns.left = ns.left - 1 %}
+                {% elif c4 >= emax %}{% set ns.e4 = ns.e4 + 1 %}{% set ns.left = ns.left - 1 %}
                 {% endif %}
               {% endif %}
             {% endif %}
           {% endfor %}
         {% endfor %}
         {{ ns.e1 }}|{{ ns.e2 }}|{{ ns.e3 }}|{{ ns.e4 }}|{{ ns.e5 }}
+      z1_extra: "{{ ns_alloc.split('|')[0] | int(0) }}"
+      z2_extra: "{{ ns_alloc.split('|')[1] | int(0) }}"
+      z3_extra: "{{ ns_alloc.split('|')[2] | int(0) }}"
+      z4_extra: "{{ ns_alloc.split('|')[3] | int(0) }}"
+      z5_extra: "{{ ns_alloc.split('|')[4] | int(0) }}"
       r1_eff: "{{ r1 + z1_extra }}"
       r2_eff: "{{ r2 + z2_extra }}"
       r3_eff: "{{ r3 + z3_extra }}"
@@ -200,16 +209,16 @@
               - service: homeassistant.turn_off
                 target:
                   entity_id:
-                    - switch.iotmug_2_relay_board_relay_1
-                    - switch.iotmug_2_relay_board_relay_2
-                    - switch.iotmug_2_relay_board_relay_3
-                    - switch.iotmug_2_relay_board_relay_4
-                    - switch.iotmug_2_relay_board_relay_5
-                    - switch.iotmug_2_relay_board_relay_6
-                    - switch.iotmug_2_relay_board_relay_7
-                    - switch.iotmug_2_relay_board_relay_8
-                    - switch.iotmug_2_relay_board_relay_9
-                    - switch.iotmug_2_relay_board_relay_10
+                    - switch.iotmug_16_relay_board_relay_1
+                    - switch.iotmug_16_relay_board_relay_2
+                    - switch.iotmug_16_relay_board_relay_3
+                    - switch.iotmug_16_relay_board_relay_4
+                    - switch.iotmug_16_relay_board_relay_5
+                    - switch.iotmug_16_relay_board_relay_6
+                    - switch.iotmug_16_relay_board_relay_7
+                    - switch.iotmug_16_relay_board_relay_8
+                    - switch.iotmug_16_relay_board_relay_9
+                    - switch.iotmug_16_relay_board_relay_10
               - service: system_log.write
                 data:
                   level: warning
@@ -236,131 +245,199 @@
                           message: >
                             HVAC Downstairs Minimum Airflow Enforced: Total demand={{ total_demand }}, Min={{ min_airflow }}, Deficit={{ deficit }}. Effective demands -> Z1:{{r1_eff}}, Z2:{{r2_eff}}, Z3:{{r3_eff}}, Z4:{{r4_eff}}, Z5:{{r5_eff}}.
 
+              - service: input_text.set_value
+                target:
+                  entity_id: input_text.hvac_downstairs_min_airflow_allocation
+                data:
+                  value: "{{ z1_extra }}|{{ z2_extra }}|{{ z3_extra }}|{{ z4_extra }}|{{ z5_extra }}"
+
               # --- ZONE 1: Kitchen (Relays 1, 2) ---
               - choose:
-                  - conditions: "{{ r1_eff >= 1 }}"
-                    sequence:
-                      - service: homeassistant.turn_off
-                        target:
-                          entity_id: switch.iotmug_2_relay_board_relay_1
-                default:
-                  - service: homeassistant.turn_on
-                    target:
-                      entity_id: switch.iotmug_2_relay_board_relay_1
+                - conditions: "{{ r1_eff >= 1 and not is_state('switch.iotmug_16_relay_board_relay_1', 'off') }}"
+                  sequence:
+                    - service: homeassistant.turn_off
+                      target:
+                        entity_id: switch.iotmug_16_relay_board_relay_1
+                - conditions: "{{ r1_eff < 1 and not is_state('switch.iotmug_16_relay_board_relay_1', 'on') }}"
+                  sequence:
+                    - service: homeassistant.turn_on
+                      target:
+                        entity_id: switch.iotmug_16_relay_board_relay_1
               - choose:
-                  - conditions: "{{ r1_eff >= 2 }}"
-                    sequence:
-                      - service: homeassistant.turn_off
-                        target:
-                          entity_id: switch.iotmug_2_relay_board_relay_2
-                default:
-                  - service: homeassistant.turn_on
-                    target:
-                      entity_id: switch.iotmug_2_relay_board_relay_2
+                - conditions: "{{ r1_eff >= 2 and not is_state('switch.iotmug_16_relay_board_relay_2', 'off') }}"
+                  sequence:
+                    - service: homeassistant.turn_off
+                      target:
+                        entity_id: switch.iotmug_16_relay_board_relay_2
+                - conditions: "{{ r1_eff < 2 and not is_state('switch.iotmug_16_relay_board_relay_2', 'on') }}"
+                  sequence:
+                    - service: homeassistant.turn_on
+                      target:
+                        entity_id: switch.iotmug_16_relay_board_relay_2
 
               # --- ZONE 2: Dining (Relays 3, 4) ---
               - choose:
-                  - conditions: "{{ r2_eff >= 1 }}"
-                    sequence:
-                      - service: homeassistant.turn_off
-                        target:
-                          entity_id: switch.iotmug_2_relay_board_relay_3
-                default:
-                  - service: homeassistant.turn_on
-                    target:
-                      entity_id: switch.iotmug_2_relay_board_relay_3
+                - conditions: "{{ r2_eff >= 1 and not is_state('switch.iotmug_16_relay_board_relay_3', 'off') }}"
+                  sequence:
+                    - service: homeassistant.turn_off
+                      target:
+                        entity_id: switch.iotmug_16_relay_board_relay_3
+                - conditions: "{{ r2_eff < 1 and not is_state('switch.iotmug_16_relay_board_relay_3', 'on') }}"
+                  sequence:
+                    - service: homeassistant.turn_on
+                      target:
+                        entity_id: switch.iotmug_16_relay_board_relay_3
               - choose:
-                  - conditions: "{{ r2_eff >= 2 }}"
-                    sequence:
-                      - service: homeassistant.turn_off
-                        target:
-                          entity_id: switch.iotmug_2_relay_board_relay_4
-                default:
-                  - service: homeassistant.turn_on
-                    target:
-                      entity_id: switch.iotmug_2_relay_board_relay_4
+                - conditions: "{{ r2_eff >= 2 and not is_state('switch.iotmug_16_relay_board_relay_4', 'off') }}"
+                  sequence:
+                    - service: homeassistant.turn_off
+                      target:
+                        entity_id: switch.iotmug_16_relay_board_relay_4
+                - conditions: "{{ r2_eff < 2 and not is_state('switch.iotmug_16_relay_board_relay_4', 'on') }}"
+                  sequence:
+                    - service: homeassistant.turn_on
+                      target:
+                        entity_id: switch.iotmug_16_relay_board_relay_4
 
               # --- ZONE 3: Living (Relays 5, 6, 7) ---
               - choose:
-                  - conditions: "{{ r3_eff >= 1 }}"
-                    sequence:
-                      - service: homeassistant.turn_off
-                        target:
-                          entity_id: switch.iotmug_2_relay_board_relay_5
-                default:
-                  - service: homeassistant.turn_on
-                    target:
-                      entity_id: switch.iotmug_2_relay_board_relay_5
+                - conditions: "{{ r3_eff >= 1 and not is_state('switch.iotmug_16_relay_board_relay_5', 'off') }}"
+                  sequence:
+                    - service: homeassistant.turn_off
+                      target:
+                        entity_id: switch.iotmug_16_relay_board_relay_5
+                - conditions: "{{ r3_eff < 1 and not is_state('switch.iotmug_16_relay_board_relay_5', 'on') }}"
+                  sequence:
+                    - service: homeassistant.turn_on
+                      target:
+                        entity_id: switch.iotmug_16_relay_board_relay_5
               - choose:
-                  - conditions: "{{ r3_eff >= 2 }}"
-                    sequence:
-                      - service: homeassistant.turn_off
-                        target:
-                          entity_id: switch.iotmug_2_relay_board_relay_6
-                default:
-                  - service: homeassistant.turn_on
-                    target:
-                      entity_id: switch.iotmug_2_relay_board_relay_6
+                - conditions: "{{ r3_eff >= 2 and not is_state('switch.iotmug_16_relay_board_relay_6', 'off') }}"
+                  sequence:
+                    - service: homeassistant.turn_off
+                      target:
+                        entity_id: switch.iotmug_16_relay_board_relay_6
+                - conditions: "{{ r3_eff < 2 and not is_state('switch.iotmug_16_relay_board_relay_6', 'on') }}"
+                  sequence:
+                    - service: homeassistant.turn_on
+                      target:
+                        entity_id: switch.iotmug_16_relay_board_relay_6
               - choose:
-                  - conditions: "{{ r3_eff >= 3 }}"
-                    sequence:
-                      - service: homeassistant.turn_off
-                        target:
-                          entity_id: switch.iotmug_2_relay_board_relay_7
-                default:
-                  - service: homeassistant.turn_on
-                    target:
-                      entity_id: switch.iotmug_2_relay_board_relay_7
+                - conditions: "{{ r3_eff >= 3 and not is_state('switch.iotmug_16_relay_board_relay_7', 'off') }}"
+                  sequence:
+                    - service: homeassistant.turn_off
+                      target:
+                        entity_id: switch.iotmug_16_relay_board_relay_7
+                - conditions: "{{ r3_eff < 3 and not is_state('switch.iotmug_16_relay_board_relay_7', 'on') }}"
+                  sequence:
+                    - service: homeassistant.turn_on
+                      target:
+                        entity_id: switch.iotmug_16_relay_board_relay_7
 
               # --- ZONE 4: Office (Relays 8, 9) ---
               - choose:
-                  - conditions: "{{ r4_eff >= 1 }}"
-                    sequence:
-                      - service: homeassistant.turn_off
-                        target:
-                          entity_id: switch.iotmug_2_relay_board_relay_8
-                default:
-                  - service: homeassistant.turn_on
-                    target:
-                      entity_id: switch.iotmug_2_relay_board_relay_8
+                - conditions: "{{ r4_eff >= 1 and not is_state('switch.iotmug_16_relay_board_relay_8', 'off') }}"
+                  sequence:
+                    - service: homeassistant.turn_off
+                      target:
+                        entity_id: switch.iotmug_16_relay_board_relay_8
+                - conditions: "{{ r4_eff < 1 and not is_state('switch.iotmug_16_relay_board_relay_8', 'on') }}"
+                  sequence:
+                    - service: homeassistant.turn_on
+                      target:
+                        entity_id: switch.iotmug_16_relay_board_relay_8
               - choose:
-                  - conditions: "{{ r4_eff >= 2 }}"
-                    sequence:
-                      - service: homeassistant.turn_off
-                        target:
-                          entity_id: switch.iotmug_2_relay_board_relay_9
-                default:
-                  - service: homeassistant.turn_on
-                    target:
-                      entity_id: switch.iotmug_2_relay_board_relay_9
+                - conditions: "{{ r4_eff >= 2 and not is_state('switch.iotmug_16_relay_board_relay_9', 'off') }}"
+                  sequence:
+                    - service: homeassistant.turn_off
+                      target:
+                        entity_id: switch.iotmug_16_relay_board_relay_9
+                - conditions: "{{ r4_eff < 2 and not is_state('switch.iotmug_16_relay_board_relay_9', 'on') }}"
+                  sequence:
+                    - service: homeassistant.turn_on
+                      target:
+                        entity_id: switch.iotmug_16_relay_board_relay_9
 
               # --- ZONE 5: Stairs (Relay 10) ---
               - choose:
-                  - conditions: "{{ r5_eff >= 1 }}"
-                    sequence:
-                      - service: homeassistant.turn_off
-                        target:
-                          entity_id: switch.iotmug_2_relay_board_relay_10
-                default:
-                  - service: homeassistant.turn_on
-                    target:
-                      entity_id: switch.iotmug_2_relay_board_relay_10
+                - conditions: "{{ r5_eff >= 1 and not is_state('switch.iotmug_16_relay_board_relay_10', 'off') }}"
+                  sequence:
+                    - service: homeassistant.turn_off
+                      target:
+                        entity_id: switch.iotmug_16_relay_board_relay_10
+                - conditions: "{{ r5_eff < 1 and not is_state('switch.iotmug_16_relay_board_relay_10', 'on') }}"
+                  sequence:
+                    - service: homeassistant.turn_on
+                      target:
+                        entity_id: switch.iotmug_16_relay_board_relay_10
 
         default:
-          # --- FAILSAFE: OPEN ALL DAMPERS ---
-          - service: homeassistant.turn_off
+          - service: input_text.set_value
             target:
-              entity_id:
-                - switch.iotmug_2_relay_board_relay_1
-                - switch.iotmug_2_relay_board_relay_2
-                - switch.iotmug_2_relay_board_relay_3
-                - switch.iotmug_2_relay_board_relay_4
-                - switch.iotmug_2_relay_board_relay_5
-                - switch.iotmug_2_relay_board_relay_6
-                - switch.iotmug_2_relay_board_relay_7
-                - switch.iotmug_2_relay_board_relay_8
-                - switch.iotmug_2_relay_board_relay_9
-                - switch.iotmug_2_relay_board_relay_10
+              entity_id: input_text.hvac_downstairs_min_airflow_allocation
+            data:
+              value: "0|0|0|0|0"
+          # --- FAILSAFE: OPEN ALL DAMPERS ---
+          - choose:
+              - conditions: "{{ not is_state('switch.iotmug_16_relay_board_relay_1', 'off') }}"
+                sequence:
+                  - service: homeassistant.turn_off
+                    target:
+                      entity_id: switch.iotmug_16_relay_board_relay_1
+          - choose:
+              - conditions: "{{ not is_state('switch.iotmug_16_relay_board_relay_2', 'off') }}"
+                sequence:
+                  - service: homeassistant.turn_off
+                    target:
+                      entity_id: switch.iotmug_16_relay_board_relay_2
+          - choose:
+              - conditions: "{{ not is_state('switch.iotmug_16_relay_board_relay_3', 'off') }}"
+                sequence:
+                  - service: homeassistant.turn_off
+                    target:
+                      entity_id: switch.iotmug_16_relay_board_relay_3
+          - choose:
+              - conditions: "{{ not is_state('switch.iotmug_16_relay_board_relay_4', 'off') }}"
+                sequence:
+                  - service: homeassistant.turn_off
+                    target:
+                      entity_id: switch.iotmug_16_relay_board_relay_4
+          - choose:
+              - conditions: "{{ not is_state('switch.iotmug_16_relay_board_relay_5', 'off') }}"
+                sequence:
+                  - service: homeassistant.turn_off
+                    target:
+                      entity_id: switch.iotmug_16_relay_board_relay_5
+          - choose:
+              - conditions: "{{ not is_state('switch.iotmug_16_relay_board_relay_6', 'off') }}"
+                sequence:
+                  - service: homeassistant.turn_off
+                    target:
+                      entity_id: switch.iotmug_16_relay_board_relay_6
+          - choose:
+              - conditions: "{{ not is_state('switch.iotmug_16_relay_board_relay_7', 'off') }}"
+                sequence:
+                  - service: homeassistant.turn_off
+                    target:
+                      entity_id: switch.iotmug_16_relay_board_relay_7
+          - choose:
+              - conditions: "{{ not is_state('switch.iotmug_16_relay_board_relay_8', 'off') }}"
+                sequence:
+                  - service: homeassistant.turn_off
+                    target:
+                      entity_id: switch.iotmug_16_relay_board_relay_8
+          - choose:
+              - conditions: "{{ not is_state('switch.iotmug_16_relay_board_relay_9', 'off') }}"
+                sequence:
+                  - service: homeassistant.turn_off
+                    target:
+                      entity_id: switch.iotmug_16_relay_board_relay_9
+          - choose:
+              - conditions: "{{ not is_state('switch.iotmug_16_relay_board_relay_10', 'off') }}"
+                sequence:
+                  - service: homeassistant.turn_off
+                    target:
+                      entity_id: switch.iotmug_16_relay_board_relay_10
           - service: system_log.write
             data:
               level: warning

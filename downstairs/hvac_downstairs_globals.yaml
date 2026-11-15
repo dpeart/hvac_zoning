@@ -65,3 +65,10 @@ input_boolean:
   hvac_downstairs_zoning_enabled:
     name: HVAC Downstairs Zoning System Enabled
     icon: mdi:power
+
+input_text:
+  hvac_downstairs_min_airflow_allocation:
+    name: HVAC Downstairs Minimum Airflow Allocation
+    max: 40
+    initial: "0|0|0|0|0"
+    icon: mdi:air-filter
