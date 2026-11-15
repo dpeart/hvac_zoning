@@ -92,10 +92,13 @@ views:
             state_not: "on"
         card:
           type: history-graph
-          title: Demand (last hour)
+          title: Demand, Min Air, and Open Registers (last hour)
           hours_to_show: 1
           entities:
             - sensor.upstairs_total_demand
+            - sensor.upstairs_min_air_registers_added
+            - sensor.upstairs_registers_requested
+            - sensor.upstairs_actual_open_registers
             - sensor.upstairs_zone_1_raw_registers
             - sensor.upstairs_zone_2_raw_registers
             - sensor.upstairs_zone_3_raw_registers
@@ -341,10 +344,13 @@ views:
             state_not: "on"
         card:
           type: history-graph
-          title: Demand (last hour)
+          title: Demand, Min Air, and Open Registers (last hour)
           hours_to_show: 1
           entities:
             - sensor.downstairs_total_demand
+            - sensor.downstairs_min_air_registers_added
+            - sensor.downstairs_registers_requested
+            - sensor.downstairs_actual_open_registers
             - sensor.downstairs_zone_1_raw_registers
             - sensor.downstairs_zone_2_raw_registers
             - sensor.downstairs_zone_3_raw_registers

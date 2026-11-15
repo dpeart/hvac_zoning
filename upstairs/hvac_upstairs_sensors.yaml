@@ -578,6 +578,13 @@ template:
         state: >
           {{ states('sensor.upstairs_zone_1_min_air_registers') | int(0) + states('sensor.upstairs_zone_2_min_air_registers') | int(0) + states('sensor.upstairs_zone_3_min_air_registers') | int(0) + states('sensor.upstairs_zone_4_min_air_registers') | int(0) + states('sensor.upstairs_zone_5_min_air_registers') | int(0) + states('sensor.upstairs_zone_6_min_air_registers') | int(0) }}
 
+      - name: "Upstairs Registers Requested"
+        unique_id: upstairs_registers_requested
+        icon: mdi:air-filter
+        unit_of_measurement: "registers"
+        state: >
+          {{ states('sensor.upstairs_total_demand') | int(0) + states('sensor.upstairs_min_air_registers_added') | int(0) }}
+
       # --- TOTAL DEMAND (Sum of all zones - respects test mode) ---
       - name: "Upstairs Total Demand"
         unique_id: upstairs_total_demand

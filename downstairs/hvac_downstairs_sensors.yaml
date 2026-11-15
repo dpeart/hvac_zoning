@@ -508,6 +508,13 @@ template:
         state: >
           {{ states('sensor.downstairs_zone_1_min_air_registers') | int(0) + states('sensor.downstairs_zone_2_min_air_registers') | int(0) + states('sensor.downstairs_zone_3_min_air_registers') | int(0) + states('sensor.downstairs_zone_4_min_air_registers') | int(0) + states('sensor.downstairs_zone_5_min_air_registers') | int(0) }}
 
+      - name: "Downstairs Registers Requested"
+        unique_id: downstairs_registers_requested
+        icon: mdi:air-filter
+        unit_of_measurement: "registers"
+        state: >
+          {{ states('sensor.downstairs_total_demand') | int(0) + states('sensor.downstairs_min_air_registers_added') | int(0) }}
+
       # --- TOTAL DEMAND (Sum of all zones) ---
       - name: "Downstairs Total Demand"
         unique_id: downstairs_total_demand
