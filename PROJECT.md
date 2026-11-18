@@ -228,6 +228,8 @@ The error sensors are test-mode aware: they substitute test inputs when `input_b
 
 (Downstairs equivalents all prefixed `hvac_downstairs_`; note `hvac_zone_loop_interval` upstairs lives in `upstairs/hvac_upstairs_globals.yaml`, downstairs in its own `downstairs/hvac_downstairs_globals.yaml`.)
 
+These tuning `input_number` helpers omit YAML `initial:` values so Home Assistant can restore the last slider value after restart. On first creation, before a saved value exists, a helper starts at its minimum; set the desired operating values from the dashboard or Developer Tools. Internal allocation and test helpers may still define `initial:` values.
+
 ### Test bench inputs
 
 | Input | Purpose |
