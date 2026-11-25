@@ -101,6 +101,104 @@ automation:
           level: warning
           message: "HVAC Downstairs zoning disabled: all relays de-energized."
 
+  - id: downstairs_open_dampers_when_idle
+    alias: "HVAC Downstairs: Open Dampers When Thermostat Idle"
+    description: "Opens downstairs dampers when the thermostat reports idle in production mode."
+    trigger:
+      - platform: state
+        entity_id: climate.downstairs_nativezone
+        attribute: hvac_action
+        to: idle
+    condition:
+      - condition: state
+        entity_id: input_boolean.hvac_downstairs_zoning_enabled
+        state: "on"
+      - condition: state
+        entity_id: input_boolean.hvac_downstairs_test_mode
+        state: "off"
+    mode: restart
+    action:
+      - repeat:
+          for_each:
+            - switch.basement_downstairs_iotmug_16_relay_relay_1
+            - switch.basement_downstairs_iotmug_16_relay_relay_2
+            - switch.basement_downstairs_iotmug_16_relay_relay_3
+            - switch.basement_downstairs_iotmug_16_relay_relay_4
+            - switch.basement_downstairs_iotmug_16_relay_relay_5
+            - switch.basement_downstairs_iotmug_16_relay_relay_6
+            - switch.basement_downstairs_iotmug_16_relay_relay_7
+            - switch.basement_downstairs_iotmug_16_relay_relay_8
+            - switch.basement_downstairs_iotmug_16_relay_relay_9
+            - switch.basement_downstairs_iotmug_16_relay_relay_10
+          sequence:
+            - choose:
+                - conditions:
+                    - condition: template
+                      value_template: >
+                        {{ is_state(repeat.item, 'on')
+                           and is_state('input_boolean.hvac_downstairs_zoning_enabled', 'on')
+                           and is_state('input_boolean.hvac_downstairs_test_mode', 'off')
+                           and state_attr('climate.downstairs_nativezone', 'hvac_action') == 'idle' }}
+                  sequence:
+                    - service: homeassistant.turn_off
+                      target:
+                        entity_id: "{{ repeat.item }}"
+      - service: system_log.write
+        data:
+          level: info
+          message: "HVAC Downstairs thermostat reported idle: dampers opened."
+
+  - id: downstairs_open_dampers_on_temp_sensor_failure
+    alias: "HVAC Downstairs: Open Affected Dampers on Temperature Sensor Failure"
+    description: "Opens only the affected zone's dampers when its production temperature sensor becomes unknown or unavailable."
+    trigger:
+      - platform: state
+        entity_id:
+          - sensor.downstairs_zone_1_temp
+          - sensor.downstairs_zone_2_temp
+          - sensor.downstairs_zone_3_temp
+          - sensor.downstairs_zone_4_temp
+          - sensor.downstairs_zone_5_temp
+        to: "unknown"
+      - platform: state
+        entity_id:
+          - sensor.downstairs_zone_1_temp
+          - sensor.downstairs_zone_2_temp
+          - sensor.downstairs_zone_3_temp
+          - sensor.downstairs_zone_4_temp
+          - sensor.downstairs_zone_5_temp
+        to: "unavailable"
+    condition:
+      - condition: state
+        entity_id: input_boolean.hvac_downstairs_zoning_enabled
+        state: "on"
+      - condition: state
+        entity_id: input_boolean.hvac_downstairs_test_mode
+        state: "off"
+      - condition: template
+        value_template: "{{ states(trigger.entity_id) in ['unknown', 'unavailable'] }}"
+    mode: queued
+    action:
+      - variables:
+          failed_zone_relays: >
+            {% set relays = {
+              'sensor.downstairs_zone_1_temp': ['switch.basement_downstairs_iotmug_16_relay_relay_1', 'switch.basement_downstairs_iotmug_16_relay_relay_2'],
+              'sensor.downstairs_zone_2_temp': ['switch.basement_downstairs_iotmug_16_relay_relay_3', 'switch.basement_downstairs_iotmug_16_relay_relay_4'],
+              'sensor.downstairs_zone_3_temp': ['switch.basement_downstairs_iotmug_16_relay_relay_5', 'switch.basement_downstairs_iotmug_16_relay_relay_6', 'switch.basement_downstairs_iotmug_16_relay_relay_7'],
+              'sensor.downstairs_zone_4_temp': ['switch.basement_downstairs_iotmug_16_relay_relay_8', 'switch.basement_downstairs_iotmug_16_relay_relay_9'],
+              'sensor.downstairs_zone_5_temp': ['switch.basement_downstairs_iotmug_16_relay_relay_10']
+            } %}
+            {{ relays.get(trigger.entity_id, []) }}
+      - service: homeassistant.turn_off
+        target:
+          entity_id: "{{ failed_zone_relays }}"
+      - service: system_log.write
+        data:
+          level: warning
+          message: >
+            HVAC Downstairs sensor failure: {{ trigger.entity_id }} is {{ states(trigger.entity_id) }};
+            opened affected zone dampers ({{ failed_zone_relays | join(', ') }}).
+
   - id: downstairs_hvac_control_loop
     alias: "HVAC Downstairs: Zone Control Loop"
     description: "Evaluates zone demands, applies minimum airflow constraints, and drives ESPHome damper relays. Runs every 10s in test mode, otherwise on the configured loop interval."
@@ -121,11 +219,13 @@ automation:
         {{ iif(test_mode,
                states('input_select.hvac_downstairs_test_action'),
                state_attr('climate.downstairs_nativezone', 'hvac_action') | string | lower) }}
-      r1: "{{ states('sensor.downstairs_zone_1_raw_registers') | int(0) }}"
-      r2: "{{ states('sensor.downstairs_zone_2_raw_registers') | int(0) }}"
-      r3: "{{ states('sensor.downstairs_zone_3_raw_registers') | int(0) }}"
-      r4: "{{ states('sensor.downstairs_zone_4_raw_registers') | int(0) }}"
-      r5: "{{ states('sensor.downstairs_zone_5_raw_registers') | int(0) }}"
+      # A failed zone sensor requests all of that zone's registers open. This
+      # also prevents minimum-airflow allocation from targeting the failed zone.
+      r1: "{{ states('sensor.downstairs_zone_1_raw_registers') | int(0) if is_number(states('sensor.downstairs_zone_1_temp')) else 2 }}"
+      r2: "{{ states('sensor.downstairs_zone_2_raw_registers') | int(0) if is_number(states('sensor.downstairs_zone_2_temp')) else 2 }}"
+      r3: "{{ states('sensor.downstairs_zone_3_raw_registers') | int(0) if is_number(states('sensor.downstairs_zone_3_temp')) else 3 }}"
+      r4: "{{ states('sensor.downstairs_zone_4_raw_registers') | int(0) if is_number(states('sensor.downstairs_zone_4_temp')) else 2 }}"
+      r5: "{{ states('sensor.downstairs_zone_5_raw_registers') | int(0) if is_number(states('sensor.downstairs_zone_5_temp')) else 1 }}"
       total_demand: "{{ r1 + r2 + r3 + r4 + r5 }}"
       total_max_registers: 10
       min_airflow: "{{ [states('input_number.hvac_downstairs_min_airflow') | int(1), 10] | min }}"

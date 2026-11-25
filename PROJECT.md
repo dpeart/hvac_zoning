@@ -174,16 +174,7 @@ Each relay's target is evaluated on every control loop, but the automation issue
 
 ### Trigger & Conditions
 
-```yaml
-trigger:   time_pattern seconds: "/10"
-condition:
-  - is_state('input_boolean.hvac_*_test_mode', 'on')
-    OR  (timestamp % loop_interval == 0)      # loop_interval from input_number (default 90s)
-  - is_state('input_boolean.hvac_*_zoning_enabled', 'on')
-```
-
-- **Test mode:** runs every 10 s (all triggers pass, no modulo gate).
-- **Production:** runs when the current epoch second is a multiple of the configured interval (e.g. 90 → fires at :00, :90 of each 2-minute window). `mode: single` prevents queueing.
+The periodic control loop is unchanged: it runs every 10 s in test mode and at the configured interval in production. A separate production-only automation triggers when the floor thermostat's `hvac_action` attribute changes to `idle`; when zoning is enabled it turns off active relays (opening dampers), checking the current mode and action before each call. This avoids waiting for the periodic gate and avoids test-mode idle events overriding the selected test action. The response starts when HA receives the state update; thermostat reporting and damper movement still take time.
 
 ### Action Flow
 
@@ -193,7 +184,7 @@ condition:
    - Log active loop summary.
    - If deficit > 0, log min-airflow warning.
    - Per relay (all zones): open/close based on `rN_eff ≥ i`.
-4. **Else (idle/off):** failsafe — open ALL dampers (turn_off all relays) + warning log.
+4. **Else (idle/off/unavailable):** periodic-loop failsafe — open ALL dampers (turn_off all relays) + warning log. In production, the separate thermostat-idle automation opens active dampers immediately, independent of the periodic interval.
 
 ---
 
@@ -239,7 +230,7 @@ These tuning `input_number` helpers omit YAML `initial:` values so Home Assistan
 | `input_number.hvac_test_target_temp` | Test setpoint (°F) |
 | `input_number.hvac_test_zone_N_temp` | Per-zone current temp slider (°F) — 0.1°F steps |
 
-When test mode is enabled, an automation copies each zone's assigned temperature sensor value into its corresponding test slider. Only numeric readings from 50–90°F are copied. If a sensor is unavailable or out of range, the slider is reset to the test target temperature and a warning is logged, preventing a stale restored slider value from silently being used. In production mode, unavailable or non-numeric zone temperature sensors yield an `unknown` zone temperature/error instead of assuming 70°F; the zone then has no sensor-derived demand. Minimum-airflow allocation can still open its registers if needed to meet the configured airflow floor.
+When test mode is enabled, an automation copies each zone's assigned temperature sensor value into its corresponding test slider. Only numeric readings from 50–90°F are copied. If a sensor is unavailable or out of range, the slider is reset to the test target temperature and a warning is logged, preventing a stale restored slider value from silently being used. In production mode, unavailable or non-numeric zone temperature sensors yield an `unknown` zone temperature/error instead of assuming 70°F. A dedicated fail-open automation turns OFF every relay belonging to that affected zone (opening its dampers), and the periodic control loop continues managing the other zones. Failed zones are excluded from minimum-airflow allocation because their relays are already treated as fully open. A warning is written to the system log.
 
 The legacy `input_number.hvac_test_zone_N_registers` (0–13 sliders) still exist but are **no longer read** by the automation; they were replaced by the temperature-driven test bench. Leave them unused.
 
@@ -286,7 +277,7 @@ Actual-open counts reflect relay states continuously, including idle, failsafe, 
 
 ## Deployment / Onboarding Steps
 
-1. **Load packages:** the HVAC package files load on restart via the explicit `!include` entries in `configuration.yaml` under `homeassistant.packages`. Restart or "Reload all YAML" after editing entity definitions.
+1. **Load packages:** the HVAC package files load on restart via the explicit `!include` entries in `configuration.yaml` under `homeassistant.packages`. Restart or "Reload all YAML" after editing entity definitions. After changing control-loop triggers, verify the climate entities expose the expected `hvac_action` attribute and test heating-to-idle on each floor; confirm relay opening in the automation trace.
 2. **Dashboard:** the YAML-mode dashboard `dashboards/hvac_zoning_dashboard.yaml` is registered under `lovelace: dashboards: hvac-zoning:` in `configuration.yaml` (no top-level `lovelace: mode`, so the default Overview stays intact) and loads from disk on restart. Edits to the `.yaml` need a restart (or Dev Tools → YAML → reload Lovelace).
 3. **Assign temp sensors:** in production mode, use the "Zone Temperature Sensors" card (or Developer Tools → States) to point each `input_text.*_temp_entity` at the real sensor entity ID. Upstairs defaults are `sensor.trisensor_8_air_temperature`, `sensor.bed_1_climate_temperature`, `sensor.bed_2_climate_temperature`, `sensor.bed_3_climate_temperature`, `sensor.upstairs_nativezone_temperature`, and `sensor.master_bath_climate_temperature` for Zones 1–6, respectively.
 4. **Verify zones:** confirm the thermostat climate entity matches the floor (`climate.upstairs_nativezone` / `climate.downstairs_nativezone`), and relay entity prefixes (`switch.iotmug_16_relay_board_relay_N` / `switch.iotmug_16_relay_board_relay_N`).
